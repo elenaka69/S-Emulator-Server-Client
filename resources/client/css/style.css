@@ -1,0 +1,205 @@
+
+.root {
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-font-size: 13px;
+    -fx-background-color: #f9f9f9;
+}
+
+.label {
+    -fx-text-fill: #333333;
+}
+
+.section-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #34495e;
+}
+
+.label:disabled {
+    -fx-opacity: 0.7;
+}
+.title {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+.label.title {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+.button {
+    -fx-background-color: linear-gradient(#64b5f6, #42a5f5);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 6 12;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+}
+.button:hover {
+    -fx-background-color: linear-gradient(#90caf9, #64b5f6);
+}
+.button:disabled {
+    -fx-opacity: 0.6;
+}
+
+.text-field {
+    -fx-background-color: white;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-padding: 4 6;
+}
+.text-field:focused {
+    -fx-border-color: #90caf9;
+    -fx-border-width: 2;
+}
+
+.titled-pane {
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}
+.titled-pane > .title {
+    -fx-background-color: linear-gradient(#eeeeee, #cccccc);
+    -fx-font-weight: bold;
+}
+
+.table-view {
+     -fx-border-color: gray;
+     -fx-border-width: 2;
+     -fx-border-radius: 5;
+}
+
+.table-view .column-header {
+    -fx-background-color: linear-gradient(#eeeeee, #cccccc);
+    -fx-font-weight: bold;
+    -fx-border-color: #bbbbbb;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #cccccc;
+    -fx-text-fill: black;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #e0e0e0; /* light gray background */
+}
+
+.table-row-cell:selected .text {
+    -fx-fill: black; /* text inside the selected row */
+}
+
+.table-cell:selected {
+    -fx-text-fill: black; /* make sure text stays black */
+}
+
+.progress-bar {
+    -fx-accent: #64b5f6;
+    -fx-control-inner-background: #eeeeee;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+}
+
+#statusBar {
+    -fx-padding: 5;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-font-weight: bold;
+}
+
+.combo-box {
+    -fx-background-color: white;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+    -fx-padding: 4 6;
+    -fx-font-size: 13px;
+}
+
+.combo-box:focused {
+    -fx-border-color: #90caf9;
+    -fx-border-width: 2;
+}
+
+.combo-box .list-cell {
+    -fx-background-color: white;
+    -fx-text-fill: #333333;
+}
+
+.combo-box .list-cell:selected {
+    -fx-background-color: #90caf9;
+    -fx-text-fill: white;
+}
+
+/* Whole popup */
+.context-menu {
+    -fx-background-color: white;
+    -fx-padding: 5;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-border-color: gray;
+}
+
+/* Each menu item */
+.menu-item {
+    -fx-text-fill: black;
+    -fx-padding: 5 15 5 15;
+    -fx-font-size: 13px;
+    -fx-background-color: white;
+}
+
+/* Hover effect */
+.menu-item:hover {
+   -fx-background-color: #cccccc;
+   -fx-text-fill: black;
+}
+
+.tooltip {
+    -fx-background-color: #f5f5f5;   /* light background */
+    -fx-text-fill: #333333;          /* dark text */
+    -fx-padding: 6 10;
+    -fx-font-size: 12px;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+    -fx-border-color: #cccccc;
+}
+
+.bp-label {
+    -fx-text-fill: white;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+/* TreeView styling (light mode) */
+.tree-view {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #cccccc;
+    -fx-border-width: 1;
+    -fx-cell-size: 22px;
+}
+
+.tree-cell {
+    -fx-text-fill: #222222;
+    -fx-font-size: 12px;
+}
+
+.tree-cell:selected {
+    -fx-background-color: #d0e8ff;
+    -fx-text-fill: black;
+}
+
+.input-container {
+    -fx-background-color: transparent;
+    -fx-border-color: #64b5f6;
+    -fx-border-radius: 5;
+    -fx-border-width: 0;
+    -fx-background-radius: 5;
+    -fx-padding: 4 6;
+    -fx-pref-width: 300; /* fallback */
+    -fx-max-width: 280;  /* prevents stretching */
+}
+
+
