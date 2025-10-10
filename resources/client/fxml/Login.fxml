@@ -42,8 +42,6 @@
                     <TextField fx:id="usernameField" promptText="Username" prefWidth="200"/>
                 </HBox>
             </VBox>
-
-
             <!-- Login button -->
             <Button text="Login" onAction="#onLogin" styleClass="button" prefWidth="100"/>
         </VBox>

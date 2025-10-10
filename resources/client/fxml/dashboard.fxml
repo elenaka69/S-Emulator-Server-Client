@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="client.DashboardController"
+            prefWidth="900" prefHeight="800"
+            stylesheets="@/client/css/style.css"
+            styleClass="root">
+
+    <!-- Top: App title -->
+    <top>
+        <VBox alignment="CENTER" spacing="10" style="-fx-padding: 20;">
+            <Label text="S-Emulator – Dashboard" styleClass="title"/>
+        </VBox>
+    </top>
+
+    <!-- Center: empty for now -->
+    <center>
+        <VBox/>
+    </center>
+
+    <!-- Bottom: Status bar -->
+    <bottom>
+        <Label fx:id="statusBar" text="Ready." styleClass="section-label" style="-fx-padding:10;"/>
+    </bottom>
+
+</BorderPane>

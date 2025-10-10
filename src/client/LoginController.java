@@ -3,9 +3,13 @@ package client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 import shared.LoginRequest;
 import shared.LoginResponse;
 
@@ -34,9 +38,11 @@ public class LoginController {
                     response -> {
                         try {
                             LoginResponse r = mapper.readValue(response, LoginResponse.class);
-                            if (r.ok)
-                                Session.username = username;
-                            Platform.runLater(() -> showStatus(r.message, r.ok ? Alert.AlertType.INFORMATION : Alert.AlertType.WARNING));
+                            if (r.ok) {
+                                Platform.runLater(() -> openDashboard(username));
+                            } else {
+                                Platform.runLater(() -> showStatus(r.message, Alert.AlertType.WARNING));
+                            }
                         } catch (Exception e) {
                             Platform.runLater(() -> showStatus("Invalid response", Alert.AlertType.ERROR));
                         }
@@ -45,6 +51,26 @@ public class LoginController {
 
         } catch (Exception e) {
             showStatus("Error: " + e.getMessage(), Alert.AlertType.ERROR);
+        }
+    }
+
+    private void openDashboard(String username) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/fxml/Dashboard.fxml"));
+            Parent root = loader.load();
+
+            // Pass the username to dashboard controller
+            DashboardController controller = loader.getController();
+            controller.setUsername(username);
+
+            Stage stage = (Stage) usernameField.getScene().getWindow(); // reuse same stage
+            stage.setScene(new Scene(root));
+            stage.setTitle("S-Emulator – Dashboard");
+            stage.show();
+
+        } catch (Exception e) {
+            showStatus("Failed to load dashboard: " + e.getMessage(), Alert.AlertType.ERROR);
+            e.printStackTrace();
         }
     }
 
