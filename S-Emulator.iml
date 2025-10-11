@@ -37,5 +37,6 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="javafx.base" level="project" />
+    <orderEntry type="library" name="angus-activation" level="project" />
   </component>
 </module>
