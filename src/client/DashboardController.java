@@ -86,6 +86,7 @@ public class DashboardController {
 
 
     private void onClose() {
+        logout();
         if (scheduler != null) {
             scheduler.shutdownNow(); // Stop updates when window closes
         }
@@ -204,6 +205,18 @@ public class DashboardController {
             loadConnectedUsers();
             loadUserStatistics(selectedUser);
         }, 0, 10, TimeUnit.SECONDS);
+    }
+
+    private void logout() {
+        BaseRequest req = new BaseRequest("logout").add("username", clientUsername);
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            if (response.ok) {
+                Platform.runLater(() -> showStatus("Logged out successfully", Alert.AlertType.INFORMATION));
+            } else {
+                Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+            }
+        });
     }
 
     private void loadUserCredits() {

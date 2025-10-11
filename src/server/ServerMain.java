@@ -45,6 +45,7 @@ public class ServerMain {
                 case "chargeCredits" -> handleChargeCredits(req);
                 case "getUsers" -> handleGetUsers(req);
                 case "userStatistics" -> handleUserStatistics(req);
+                case "logout" ->handleLogout(req);
                 default -> new BaseResponse(false, "Unknown action: " + req.action);
             };
 
@@ -140,5 +141,15 @@ public class ServerMain {
         statistics .put("Total number of Executions", String.valueOf(profile.getNumberExecutions()));
 
         return new BaseResponse(true, "Collected statistic successfully").add("statistics", statistics);
+    }
+
+    private static BaseResponse handleLogout(BaseRequest req) {
+        String username = (String) req.data.get("username");
+        UserProfile profile = UserManager.getActiveUsers().get(username);
+        if (profile == null || !profile.isActive()) {
+            return new BaseResponse(false, "User not logged in");
+        }
+        UserManager.logoutUser(username);
+        return new BaseResponse(true, "Logged out successfully");
     }
 }
