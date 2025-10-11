@@ -11,7 +11,7 @@ public class MainApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/fxml/Login.fxml"));
-      //  FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/fxml/Dashboard//.fxml"));
+   //     FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/fxml/Dashboard.fxml"));
         Scene scene = new Scene(loader.load());
         stage.setTitle("S-Emulator - Login");
         stage.setScene(scene);

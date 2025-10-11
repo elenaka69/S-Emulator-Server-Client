@@ -8,10 +8,15 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import shared.BaseRequest;
 import shared.BaseResponse;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -29,13 +34,15 @@ public class DashboardController {
     @FXML private Label statusBar;
     @FXML private TextField creditsField;
     @FXML private TextField chargeAmountField;
+    @FXML private ProgressBar progressBar;
+    @FXML private TextField filePathField;
     @FXML public TableView<ConnectedUsersRow> connectedUsersTable;
-    @FXML public TableColumn colNumber;
-    @FXML public TableColumn colUsername;
-    @FXML public TableColumn colLoginTime;
+    @FXML public TableColumn<ConnectedUsersRow, Integer> colNumber;
+    @FXML public TableColumn<ConnectedUsersRow, String> colUsername;
+    @FXML public TableColumn<ConnectedUsersRow, String> colLoginTime;
     @FXML public TableView<StatisticUserRow>  statisticTable;
-    @FXML public TableColumn colProperty;
-    @FXML public TableColumn colValue;
+    @FXML public TableColumn<StatisticUserRow, String> colProperty;
+    @FXML public TableColumn<StatisticUserRow, String> colValue;
 
     private String clientUsername;
     private String selectedUser;
@@ -94,6 +101,37 @@ public class DashboardController {
 
     @FXML
     private void onLoadFile() {
+        chooseFile();
+        String filePath = filePathField.getText();
+        File file = validateFile(filePath);
+        if (file == null) {
+            filePathField.clear();
+            return;
+        }
+        try {
+            // Read file content as bytes
+            byte[] fileBytes = Files.readAllBytes(file.toPath());
+            // Encode to Base64 for JSON transport
+            String base64Data = Base64.getEncoder().encodeToString(fileBytes);
+
+            BaseRequest req = new BaseRequest("uploadFile")
+                    .add("username", clientUsername)
+                    .add("filename", file.getName())
+                    .add("fileData", base64Data);
+
+            sendRequest("http://localhost:8080/api", req, response -> {
+                Platform.runLater(() -> {
+                    if (response.ok) {
+                        showStatus("File uploaded successfully!", Alert.AlertType.INFORMATION);
+                    } else {
+                        showStatus("Upload failed: " + response.message, Alert.AlertType.ERROR);
+                    }
+                });
+            });
+
+        } catch (IOException e) {
+            showStatus("Failed to read file: " + e.getMessage(), Alert.AlertType.ERROR);
+        }
 
     }
 
@@ -102,8 +140,7 @@ public class DashboardController {
         String amountStr = chargeAmountField.getText().trim();
         if (amountStr.isEmpty()) {
             Platform.runLater(() ->
-                    new Alert(Alert.AlertType.WARNING, "Please enter the amount of credits to charge.").showAndWait()
-            );
+                    showAlert("Credit", "Please enter the amount of credits to charge.", Alert.AlertType.WARNING));
             return;
         }
 
@@ -207,6 +244,42 @@ public class DashboardController {
         }, 0, 10, TimeUnit.SECONDS);
     }
 
+    private void chooseFile() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select XML File");
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("XML files (*.xml)", "*.xml")
+        );
+
+        // Get the current window
+        Stage stage = (Stage) filePathField.getScene().getWindow();
+
+        File selectedFile = fileChooser.showOpenDialog(stage);
+        if (selectedFile != null) {
+            filePathField.setText(selectedFile.getAbsolutePath());
+
+            showStatus("File selected: " + selectedFile.getName(), Alert.AlertType.INFORMATION);
+            progressBar.setProgress(0.0);
+        }
+    }
+
+    private File validateFile(String filePath) {
+        if (filePath == null || filePath.isEmpty()) {
+            showAlert("No File Selected", "Please select a file first.", Alert.AlertType.WARNING);
+            return null;
+        }
+        if (!filePath.endsWith(".xml")) {
+            showAlert("Invalid File", "Please provide a valid XML file.", Alert.AlertType.WARNING);
+            return null;
+        }
+        File file = new File(filePath);
+        if (!file.exists()) {
+            showAlert("File Not Found", "The file does not exist:\n" + filePath, Alert.AlertType.ERROR);
+            return null;
+        }
+        return file;
+    }
+
     private void logout() {
         BaseRequest req = new BaseRequest("logout").add("username", clientUsername);
 
@@ -304,6 +377,15 @@ public class DashboardController {
         } catch (Exception e) {
             showStatus("Error: " + e.getMessage(), Alert.AlertType.ERROR);
         }
+    }
+
+    private void showAlert(String title, String message, Alert.AlertType type) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+        showStatus(message, type);
     }
 
     private void showStatus(String message, Alert.AlertType type) {

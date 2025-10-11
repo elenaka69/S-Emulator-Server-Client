@@ -1,6 +1,6 @@
 package server.engine.program;
 
-import server.engine.execution.EngineManager;
+import server.engine.execution.ProgramCollection;
 import server.engine.impl.api.skeleton.AbstractOpBasic;
 
 import java.util.*;
@@ -24,7 +24,7 @@ public class SprogramImpl extends FunctionExecutorImpl {
             functions = new ArrayList<>();
         functions.clear();
         funcNameList.forEach(funcName->{
-            FunctionExecutor func = EngineManager.getFunction(funcName);
+            FunctionExecutor func = ProgramCollection.getFunction(funcName);
             if (func != null)
                 functions.add(func.myClone());
         });

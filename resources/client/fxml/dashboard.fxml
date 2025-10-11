@@ -10,6 +10,7 @@
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.ProgressBar?>
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="client.DashboardController"
             prefWidth="900" prefHeight="900"
@@ -39,6 +40,9 @@
                 <TextField fx:id="creditsField" prefWidth="80" editable="false"/>
                 <Button text="Charge Credits" onAction="#onChargeCredits"/>
                 <TextField fx:id="chargeAmountField" prefWidth="80"/>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 0 0 0;">
+                <ProgressBar fx:id="progressBar" prefHeight="20" prefWidth="435" progress="0.0" style="-fx-padding: 0 0 0 10;"/>
             </HBox>
         </VBox>
     </top>

@@ -4,7 +4,7 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 
-import server.engine.execution.EngineManager;
+import server.engine.execution.ProgramCollection;
 import server.engine.impl.api.basic.*;
 import server.engine.impl.api.skeleton.AbstractOpBasic;
 import server.engine.impl.api.synthetic.*;
@@ -102,7 +102,7 @@ public class Factory
 
         ((SprogramImpl)program).setFunctions(functions);
         ((SprogramImpl) program).calculateCost();
-        EngineManager.registerProgram(fileName, (SprogramImpl)program);
+        ProgramCollection.registerProgram(fileName, (SprogramImpl)program);
         return ERROR_CODES.ERROR_OK;
     }
 
@@ -171,11 +171,11 @@ public class Factory
 
         xFunctions.forEach(xFunc -> {
             String name = xFunc.getName();
-            FunctionExecutorImpl sFunc = EngineManager.getFunction(name);
+            FunctionExecutorImpl sFunc = ProgramCollection.getFunction(name);
             if (sFunc == null) {
                 sFunc = new FunctionExecutorImpl(name);
                 sFunc.setUserString(xFunc.getUserString());
-                EngineManager.registerFunction(name, sFunc);
+                ProgramCollection.registerFunction(name, sFunc);
             }
             functions.add(name);
         });
@@ -188,7 +188,7 @@ public class Factory
             instructionCollect collection = new instructionCollect(sInstructions);
             collection.extractLabels();
 
-            FunctionExecutor func = EngineManager.getFunction(xFunc.getName());
+            FunctionExecutor func = ProgramCollection.getFunction(xFunc.getName());
 
             validateLabels(collection.getInstructions(), collection.getDefinedLabels());
             res = buildProgram(func, collection.getInstructions(), collection.getDefinedLabels());
@@ -200,7 +200,7 @@ public class Factory
 
     private int validateFunctions(String funcName, String funcArgs) {
 
-        if (!EngineManager.isFunctionExists(funcName))
+        if (!ProgramCollection.isFunctionExists(funcName))
             return ERROR_CODES.ERROR_FUNCTION_MISSING;
         functions.add(funcName);
 
@@ -240,7 +240,7 @@ public class Factory
 
             if (wordStart < pos) {
                 word = funcArgs.substring(wordStart, pos);
-                if (!EngineManager.isFunctionExists(word))
+                if (!ProgramCollection.isFunctionExists(word))
                     return ERROR_CODES.ERROR_FUNCTION_MISSING;
                 functions.add(word);
             }
@@ -437,7 +437,7 @@ public class Factory
                         else
                             targetLabel = new LabelImpl(Integer.parseInt(targetLabelName.substring(1)));
                         extractVarFromArgs( functionArguments,  inputVars,  allVars);
-                        op = new OPJumpEqualFunction(curVar, lbl, funcName, functionArguments, targetLabel, EngineManager.getFunction(funcName));
+                        op = new OPJumpEqualFunction(curVar, lbl, funcName, functionArguments, targetLabel, ProgramCollection.getFunction(funcName));
                         break;
                     }
                     case "QUOTE": {
@@ -446,7 +446,7 @@ public class Factory
                         if (validateFunctions(funcName, functionArguments) != ERROR_CODES.ERROR_OK)
                             return ERROR_CODES.ERROR_FUNCTION_MISSING;
                         extractVarFromArgs( functionArguments,  inputVars,  allVars);
-                        op = new OPQuote(curVar, lbl, funcName, functionArguments, EngineManager.getFunction(funcName));
+                        op = new OPQuote(curVar, lbl, funcName, functionArguments, ProgramCollection.getFunction(funcName));
                         break;
                     }
                     default:

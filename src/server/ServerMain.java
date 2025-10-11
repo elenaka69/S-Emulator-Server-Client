@@ -5,17 +5,18 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import server.auth.UserManager;
 import server.auth.UserProfile;
+import server.engine.execution.ERROR_CODES;
+import server.engine.execution.EngineManager;
 import shared.BaseRequest;
 import shared.BaseResponse;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Executors;
 
 public class ServerMain {
@@ -46,6 +47,7 @@ public class ServerMain {
                 case "getUsers" -> handleGetUsers(req);
                 case "userStatistics" -> handleUserStatistics(req);
                 case "logout" ->handleLogout(req);
+                case "uploadFile" -> handleUploadFile(req);
                 default -> new BaseResponse(false, "Unknown action: " + req.action);
             };
 
@@ -152,4 +154,41 @@ public class ServerMain {
         UserManager.logoutUser(username);
         return new BaseResponse(true, "Logged out successfully");
     }
+
+    private static BaseResponse handleUploadFile(BaseRequest req) {
+        try {
+            String username = (String) req.data.get("username");
+            String filename = (String) req.data.get("filename");
+            String base64Data = (String) req.data.get("fileData");
+
+            if (username == null || filename == null || base64Data == null) {
+                return new BaseResponse(false, "Missing upload data");
+            }
+
+            UserProfile profile = UserManager.getActiveUsers().get(username);
+            if (profile == null || !profile.isActive()) {
+                return new BaseResponse(false, "User not logged in");
+            }
+
+            // Decode Base64 → bytes → InputStream
+            byte[] fileBytes = Base64.getDecoder().decode(base64Data);
+            try (InputStream xmlStream = new ByteArrayInputStream(fileBytes)) {
+                // Call your parsing function
+                int result = EngineManager.addProgram(username, filename, xmlStream);
+                if (result == ERROR_CODES.ERROR_INVALID_FILE)
+                    return new BaseResponse(false, "Failed to upload file. Invalid XML format.");
+                if (result == ERROR_CODES.ERROR_PROGRAM_EXISTS)
+                    return new BaseResponse(false, "Failed to upload file. Program already exists.");
+                if (result == ERROR_CODES.ERROR_FUNCTION_MISSING)
+                    return new BaseResponse(false, "Failed to upload file. The program requires a function that is missing.");
+
+                return new BaseResponse(true, "File uploaded and parsed successfully");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new BaseResponse(false, "Server error: " + e.getMessage());
+        }
+    }
+
 }

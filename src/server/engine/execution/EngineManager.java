@@ -1,55 +1,38 @@
 package server.engine.execution;
 
-import server.engine.program.FunctionExecutorImpl;
-import server.engine.program.SprogramImpl;
+import server.auth.UserManager;
+import server.engine.input.XmlTranslator.Factory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.InputStream;
 
 public class EngineManager {
-    private static final Map<String, SprogramImpl> programs = new HashMap<>();
-    private static final Map<String, FunctionExecutorImpl> functions = new HashMap<>();
-    private static List<String> listPrograms = new ArrayList<>();
-    private static List<String> listFunctions = new ArrayList<>();
+    private static Factory factory = new Factory();
 
-    public static void registerProgram(String fileName, SprogramImpl program) {
-        programs.put(fileName, program);
-        listPrograms.add(fileName);
-    }
+    public static int addProgram(String userName, String fileName, InputStream xmlStream) {
+        try {
+            if (ProgramCollection.isProgramExists(fileName)) {
+                return ERROR_CODES.ERROR_PROGRAM_EXISTS;
+            }
 
-    public static SprogramImpl getProgram(String fileName) {
-        return programs.get(fileName);
-    }
+            int res;
+            int nFunctionsBefore = ProgramCollection.getListFunctions().size();
 
-    public static void registerFunction(String functionName, FunctionExecutorImpl function) {
-        functions.put(functionName, function);
-        listFunctions.add(functionName);
-    }
+            res = factory.loadProgramFromXml(fileName, xmlStream);
 
-    public static void removeFunction(String functionName) {
-        functions.remove(functionName);
-        listFunctions.remove(functionName);
-    }
+            int nFunctionsAfter = ProgramCollection.getListFunctions().size();
+            if (nFunctionsAfter > nFunctionsBefore)
+                UserManager.incrementFunctions(userName, nFunctionsAfter - nFunctionsBefore);
 
-    public static FunctionExecutorImpl getFunction(String functionName) {
-        return functions.get(functionName);
-    }
+            if (res == ERROR_CODES.ERROR_OK) {
+                UserManager.incrementPrograms(userName);
+            } else if (res == ERROR_CODES.ERROR_FUNCTION_MISSING) {
+                return ERROR_CODES.ERROR_FUNCTION_MISSING;
+            }
 
-    public static List<String> getListPrograms() {
-        return listPrograms;
-    }
-
-    public static List<String> getListFunctions() {
-        return listFunctions;
-    }
-
-    public static boolean isProgramExists(String fileName) {
-        return programs.containsKey(fileName);
-    }
-
-    public static boolean isFunctionExists(String functionName) {
-        return functions.containsKey(functionName);
+            return ERROR_CODES.ERROR_OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ERROR_CODES.ERROR_INVALID_FILE;
+        }
     }
 }

@@ -1,7 +1,7 @@
 package server.engine.impl.api.synthetic;
 
 
-import server.engine.execution.EngineManager;
+import server.engine.execution.ProgramCollection;
 import server.engine.impl.api.basic.OpNeutral;
 import server.engine.impl.api.skeleton.AbstractOpBasic;
 import server.engine.impl.api.skeleton.OpData;
@@ -51,7 +51,7 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
         if (arg.getType().equals(AbstractArgument.ArgumentTypes.VARIABLE)) {
             return function.getProgramDegree() + 1;
         } else {
-            subFunction = EngineManager.getFunction(((FunctionArgument) arg).getFunctionName());
+            subFunction = ProgramCollection.getFunction(((FunctionArgument) arg).getFunctionName());
 
             args = ((FunctionArgument) arg).getArgument();
             if (args == null) {
