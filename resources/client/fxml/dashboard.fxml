@@ -12,7 +12,7 @@
 <?import javafx.scene.control.TableColumn?>
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="client.DashboardController"
-            prefWidth="900" prefHeight="800"
+            prefWidth="900" prefHeight="900"
             stylesheets="@/client/css/style.css"
             styleClass="root">
 
@@ -62,21 +62,21 @@
                                            prefWidth="400">
                                     <columns>
                                         <TableColumn text="#" prefWidth="30" fx:id="colNumber"/>
-                                        <TableColumn text="Username" prefWidth="180" fx:id="colUsername"/>
-                                        <TableColumn text="Login Time" prefWidth="180" fx:id="colLoginTime"/>
+                                        <TableColumn text="Username" prefWidth="170" fx:id="colUsername"/>
+                                        <TableColumn text="Login Time" prefWidth="170" fx:id="colLoginTime"/>
                                     </columns>
                                 </TableView>
                             </VBox>
-
+                            <Button text="Unselect User" onAction="#onUnselectUser"/>
                             <!-- Statistics Table -->
                             <Label text="Statistics" styleClass="section-label" alignment="TOP_CENTER"/>
                             <VBox spacing="5" alignment="CENTER_LEFT" fillWidth="false">
-                                <TableView fx:id="statisticTable" prefHeight="200" VBox.vgrow="ALWAYS"
+                                <TableView fx:id="statisticTable" prefHeight="300" VBox.vgrow="ALWAYS"
                                            style="-fx-border-color: gray; -fx-border-width: 2; -fx-border-radius: 5;"
                                            prefWidth="400">
                                     <columns>
-                                        <TableColumn text="Property" prefWidth="250" fx:id="colProperty"/>
-                                        <TableColumn text="Value" prefWidth="150" fx:id="colValue"/>
+                                        <TableColumn text="Property" prefWidth="240" fx:id="colProperty"/>
+                                        <TableColumn text="Value" prefWidth="130" fx:id="colValue"/>
                                     </columns>
                                 </TableView>
                             </VBox>
@@ -85,7 +85,7 @@
                     <TitledPane text="Programs" collapsible="false" HBox.hgrow="ALWAYS">
                         <VBox spacing="10" alignment="TOP_CENTER" fillWidth="true" style="-fx-padding: 10;">
 
-                            <!-- Connected Users Table -->
+                            <!-- Loaded Programs Table -->
                             <Label text="Available programs" styleClass="section-label" alignment="TOP_CENTER"/>
                             <VBox spacing="5" alignment="CENTER_LEFT" fillWidth="false">
                                 <TableView fx:id="programsTable" prefHeight="300" VBox.vgrow="ALWAYS"
@@ -98,11 +98,11 @@
                                     </columns>
                                 </TableView>
                             </VBox>
-
-                            <!-- Statistics Table -->
+                            <Button text="Execute Program" onAction="#onExecuteProgram"/>
+                            <!-- Loaded Functions Table -->
                             <Label text="Available functions" styleClass="section-label" alignment="TOP_CENTER"/>
                             <VBox spacing="5" alignment="CENTER_LEFT" fillWidth="false">
-                                <TableView fx:id="functionsTable" prefHeight="200" VBox.vgrow="ALWAYS"
+                                <TableView fx:id="functionsTable" prefHeight="300" VBox.vgrow="ALWAYS"
                                            style="-fx-border-color: gray; -fx-border-width: 2; -fx-border-radius: 5;"
                                            prefWidth="400">
                                     <columns>

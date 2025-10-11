@@ -10,8 +10,10 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-import shared.LoginRequest;
-import shared.LoginResponse;
+import shared.BaseRequest;
+import shared.BaseResponse;
+
+import java.util.function.Consumer;
 
 public class LoginController {
 
@@ -29,26 +31,31 @@ public class LoginController {
             return;
         }
 
-        LoginRequest req = new LoginRequest(username); // Only username now
+        BaseRequest req = new BaseRequest("login").add("username", username);
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            if (response.ok) {
+                Platform.runLater(() -> openDashboard(username));
+            } else {
+                Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+            }
+        });
+    }
+
+    private void sendRequest(String url, BaseRequest req, Consumer<BaseResponse> onSuccess) {
         try {
             String json = mapper.writeValueAsString(req);
-            showStatus("Connecting...", Alert.AlertType.INFORMATION);
-
-            http.postJsonAsync("http://localhost:8080/login", json,
-                    response -> {
+            http.postJsonAsync(url, json,
+                    respStr -> {
                         try {
-                            LoginResponse r = mapper.readValue(response, LoginResponse.class);
-                            if (r.ok) {
-                                Platform.runLater(() -> openDashboard(username));
-                            } else {
-                                Platform.runLater(() -> showStatus(r.message, Alert.AlertType.WARNING));
-                            }
+                            BaseResponse resp = mapper.readValue(respStr, BaseResponse.class);
+                            onSuccess.accept(resp);
                         } catch (Exception e) {
                             Platform.runLater(() -> showStatus("Invalid response", Alert.AlertType.ERROR));
                         }
                     },
-                    err -> Platform.runLater(() -> showStatus("Server error", Alert.AlertType.ERROR)));
-
+                    err -> Platform.runLater(() -> showStatus("Server error", Alert.AlertType.ERROR))
+            );
         } catch (Exception e) {
             showStatus("Error: " + e.getMessage(), Alert.AlertType.ERROR);
         }
@@ -61,7 +68,7 @@ public class LoginController {
 
             // Pass the username to dashboard controller
             DashboardController controller = loader.getController();
-            controller.setUsername(username);
+            controller.startDashBoard(username);
 
             Stage stage = (Stage) usernameField.getScene().getWindow(); // reuse same stage
             stage.setScene(new Scene(root));
