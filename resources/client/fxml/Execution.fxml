@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="client.ExecutionController"
+            prefWidth="900" prefHeight="800"
+            stylesheets="@/client/css/style.css"
+            styleClass="root">
+
+    <!-- Top: App title -->
+    <top>
+        <VBox alignment="CENTER" spacing="10" style="-fx-padding: 20;">
+            <Label text="S-Emulator - Execution" styleClass="title"/>
+
+        <!-- Username (aligned left) -->
+            <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 0 0 10;" fillHeight="true">
+                <Label fx:id="usernameField" text="" styleClass="section-label"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+
+    </center>
+
+    <!-- Bottom: Status bar -->
+    <bottom>
+        <Label fx:id="statusBar" text="Ready." styleClass="section-label" style="-fx-padding:10; "/>
+    </bottom>
+
+</BorderPane>

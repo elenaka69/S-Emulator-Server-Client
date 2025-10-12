@@ -6,6 +6,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.FileChooser;
@@ -34,7 +37,7 @@ public class DashboardController {
 
     private ScheduledExecutorService scheduler;
 
-    @FXML public Label userName;
+    @FXML public Label usernameField;
     @FXML private Label statusBar;
     @FXML private TextField creditsField;
     @FXML private TextField chargeAmountField;
@@ -91,13 +94,21 @@ public class DashboardController {
             }
         });
 
+        programsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            if (newSel != null) {
+                int cost = newSel.getCost();
+                String selectedProgram = newSel.getProgramName();
+                showStatus("Selected Program: " + selectedProgram + " (Cost: " + cost + " credits)", Alert.AlertType.INFORMATION);
+            }
+        });
+
         startScheduler();
     }
 
     public void startDashBoard(String username) {
         this.clientUsername = username;
         selectedUser = username;
-        userName.setText(username);
+        usernameField.setText(username);
         showStatus("Logged in as: " + username, Alert.AlertType.INFORMATION);
         loadUserCredits();
         loadConnectedUsers();
@@ -224,6 +235,23 @@ public class DashboardController {
 
     @FXML
     public void onExecuteProgram(ActionEvent actionEvent) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/fxml/Execution.fxml"));
+            Parent root = loader.load();
+
+            // Pass the username to dashboard controller
+            ExecutionController controller = loader.getController();
+         //   controller.startDashBoard(username);
+
+            Stage stage = (Stage) usernameField.getScene().getWindow(); // reuse same stage
+            stage.setScene(new Scene(root));
+            stage.setTitle("S-Emulator – Execution");
+            stage.show();
+
+        } catch (Exception e) {
+            showStatus("Failed to load execution: " + e.getMessage(), Alert.AlertType.ERROR);
+            e.printStackTrace();
+        }
     }
 
     public static class ConnectedUsersRow {
