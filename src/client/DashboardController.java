@@ -59,9 +59,10 @@ public class DashboardController {
     public TableColumn<FunctionRow, String> colFunction;
     public TableColumn<FunctionRow, Integer> colFuncCost;
 
-
     private String clientUsername;
     private String selectedUser;
+    private String selectedProgram = null;
+    private int selectedProgramCost = 0;
 
     @FXML
     public void initialize() {
@@ -96,9 +97,11 @@ public class DashboardController {
 
         programsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
             if (newSel != null) {
-                int cost = newSel.getCost();
-                String selectedProgram = newSel.getProgramName();
-                showStatus("Selected Program: " + selectedProgram + " (Cost: " + cost + " credits)", Alert.AlertType.INFORMATION);
+                selectedProgramCost = newSel.getCost();
+                selectedProgram = newSel.getProgramName();
+            } else {
+                selectedProgram = null;
+                selectedProgramCost = 0;
             }
         });
 
@@ -204,7 +207,6 @@ public class DashboardController {
             return;
         }
 
-        // Build request
         BaseRequest req = new BaseRequest("chargeCredits")
                 .add("username", clientUsername)
                 .add("amount", amount);
@@ -236,13 +238,30 @@ public class DashboardController {
 
     @FXML
     public void onExecuteProgram(ActionEvent actionEvent) {
+        if (selectedProgram == null) {
+            showAlert("Program","⚠\uFE0FPlease select a program to execute.", Alert.AlertType.WARNING);
+            return;
+        }
+        if (selectedProgramCost > Integer.parseInt(creditsField.getText())) {
+            showAlert("Insufficient Credits",
+                    "You do not have enough credits to execute this program.\n" +
+                            "Program Cost: " + selectedProgramCost + "\n" +
+                            "Your Credits: " + creditsField.getText(),
+                    Alert.AlertType.WARNING);
+            return;
+        }
+
+        openExecution();
+    }
+
+    private void openExecution() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/fxml/Execution.fxml"));
             Parent root = loader.load();
 
             // Pass the username to dashboard controller
             ExecutionController controller = loader.getController();
-         //   controller.startDashBoard(username);
+            controller.startExecutionBoard(clientUsername, selectedProgram);
 
             Stage stage = (Stage) usernameField.getScene().getWindow(); // reuse same stage
             stage.setScene(new Scene(root));

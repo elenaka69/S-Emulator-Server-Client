@@ -52,9 +52,9 @@
         <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-padding: 0 10 10 0;">
             <content>
                 <VBox spacing="10" alignment="TOP_CENTER">
-                <!-- Run / Debug modules side-by-side -->
+                <!-- Users / Programs modules side-by-side -->
                 <HBox spacing="10" alignment="TOP_LEFT" style="-fx-padding: 0 0 0 20;">
-                <!-- Run Module -->
+                <!-- Users Module -->
                     <TitledPane text="Users" collapsible="false" prefWidth="400" >
                         <VBox spacing="10" alignment="TOP_CENTER" fillWidth="true" style="-fx-padding: 10;">
 
@@ -86,6 +86,7 @@
                             </VBox>
                         </VBox>
                     </TitledPane>
+                    <!-- Programs Module -->
                     <TitledPane text="Programs" collapsible="false" HBox.hgrow="ALWAYS">
                         <VBox spacing="10" alignment="TOP_CENTER" fillWidth="true" style="-fx-padding: 10;">
 

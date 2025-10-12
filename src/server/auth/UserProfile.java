@@ -1,5 +1,8 @@
 package server.auth;
 
+import server.engine.program.FunctionExecutor;
+import server.engine.program.SprogramImpl;
+
 import java.time.LocalDateTime;
 
 public class UserProfile {
@@ -14,6 +17,9 @@ public class UserProfile {
     private int numberPrograms = 0;
     private int numberFunctions = 0;
     private int numberExecutions = 0;
+    private static SprogramImpl choosenMainProgram = null;
+    private static FunctionExecutor workingFunction = null;
+    private static String  mainProgramName = null;
 
     public UserProfile(String username) {
         this.username = username;
@@ -47,4 +53,14 @@ public class UserProfile {
     public int getNumberExecutions() { return numberExecutions; }
 
     public void setNumberExecutions(int numberExecutions) { this.numberExecutions = numberExecutions; }
+
+    public void setMainProgram(SprogramImpl program, String programName) {
+        choosenMainProgram = program;
+        workingFunction = choosenMainProgram;
+        mainProgramName = programName;
+    }
+
+    public FunctionExecutor getWorkProgram() {
+        return workingFunction;
+    }
 }

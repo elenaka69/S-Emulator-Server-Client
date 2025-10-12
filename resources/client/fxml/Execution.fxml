@@ -23,7 +23,179 @@
     </top>
 
     <center>
+        <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-padding: 0 10 10 0;">
+            <content>
+                <VBox spacing="10" alignment="TOP_CENTER">
+                <!-- Instruction / Run-Debug modules side-by-side -->
+                    <HBox spacing="10" alignment="TOP_LEFT" style="-fx-padding: 0 0 0 20;">
+                    <!-- Instruction Module -->
+                        <TitledPane text="Instructions" collapsible="false" prefWidth="850" >
+                            <VBox spacing="10" alignment="TOP_CENTER" fillWidth="true" style="-fx-padding: 10;">
+                                <HBox spacing="10" alignment="CENTER_LEFT">
+                                    <Label fx:id="expandLabel" text="Range Degrees"/>
+                                    <TextField fx:id="expandField" promptText="0" prefWidth="50"/>
+                                    <Button text="Expand" fx:id="expandButton" disable="true" onAction="#onExpand"/>
+                                    <Button text="Collapse" fx:id="collapseButton" disable="true" onAction="#onCollapse"/>
+                                </HBox>
+                                <HBox spacing="10" alignment="CENTER_LEFT">
+                                    <ComboBox fx:id="funcsComboBox" prefWidth="150" editable="true" disable="true" promptText="Function Selector"/>
+                                    <ComboBox fx:id="highlightComboBox" prefWidth="150" editable="true" disable="true" promptText="Highlight selection"/>
+                                </HBox>
+                                <!-- Label + Table -->
+                                <Label text="Program Instructions:" styleClass="section-label" alignment="TOP_CENTER"/>
+                                <VBox spacing="5" alignment="CENTER_LEFT" fillWidth="false" style="-fx-padding: 0 0 0 0;">
+                                    <fx:define>
+                                        <ToggleGroup fx:id="viewToggleGroup"/>
+                                    </fx:define>
+                                    <HBox spacing="10" alignment="CENTER_LEFT">
+                                        <Label text="View Mode:"/>
+                                        <RadioButton fx:id="tableRadio" text="Table" selected="true" toggleGroup="$viewToggleGroup"/>
+                                        <RadioButton fx:id="treeRadio" text="Tree" toggleGroup="$viewToggleGroup"/>
+                                    </HBox>
+                                    <StackPane fx:id="viewStack" prefHeight="200" prefWidth="460">
+                                        <!-- Table view -->
+                                        <TableView fx:id="instructionTable" prefHeight="200" prefWidth="460" VBox.vgrow="NEVER"
+                                                   style="-fx-border-color: gray; -fx-border-width: 2; -fx-border-radius: 5;">
+                                            <columns>
+                                                <TableColumn text="bp" prefWidth="30" fx:id="colBreakpoint"/>
+                                                <TableColumn text="#" prefWidth="30" fx:id="colNumber"/>
+                                                <TableColumn text="Type" prefWidth="60" fx:id="colType"/>
+                                                <TableColumn text="Label" prefWidth="60" fx:id="colLabel"/>
+                                                <TableColumn text="Instruction" prefWidth="160" fx:id="colInstruction"/>
+                                                <TableColumn text="Cycle" prefWidth="70" fx:id="colCycle"/>
+                                            </columns>
+                                        </TableView>
+                                        <!-- Tree view -->
+                                        <TreeView fx:id="programTree" visible="false" managed="false"/>
+                                    </StackPane>
+                                </VBox>
+                                <Label text="Instruction history chain:" styleClass="section-label" alignment="TOP_CENTER"/>
+                                <VBox spacing="5" alignment="CENTER_LEFT" fillWidth="false" style="-fx-padding: 0 0 0 0;">
+                                    <TableView fx:id="historyInstrTable" prefHeight="150" prefWidth="460" VBox.vgrow="NEVER"
+                                               style="-fx-border-color: gray; -fx-border-width: 2; -fx-border-radius: 5;">
+                                        <columns>
+                                            <TableColumn text="#" prefWidth="40" fx:id="colHistoryNumber"/>
+                                            <TableColumn text="Type" prefWidth="70" fx:id="colHistoryType"/>
+                                            <TableColumn text="Label" prefWidth="70" fx:id="colHistoryLabel"/>
+                                            <TableColumn text="Instruction" prefWidth="160" fx:id="colHistoryInstruction"/>
+                                            <TableColumn text="Cycle" prefWidth="80" fx:id="colHistoryCycle"/>
+                                        </columns>
+                                    </TableView>
+                                </VBox>
+                            </VBox>
+                        </TitledPane>
+                        <TitledPane text="Run-Debug" collapsible="false" prefWidth="850" >
+                            <VBox spacing="10" alignment="TOP_CENTER" fillWidth="true" style="-fx-padding: 10;">
+                                <HBox fx:id="runButtonsBox" spacing="10" alignment="TOP_LEFT" style="-fx-padding: 0 0 0 10;" >
+                                    <Button fx:id="runButton"
+                                            text="Run"
+                                            disable="true"
+                                            onAction="#onRun"
+                                            contentDisplay="LEFT">
+                                        <graphic>
+                                            <ImageView fitWidth="16" fitHeight="16">
+                                                <image>
+                                                    <Image url="@/client/icons/play.png" />
+                                                </image>
+                                            </ImageView>
+                                        </graphic>
+                                    </Button>
+                                    <Button fx:id="debugButton"
+                                            text="Debug"
+                                            disable="true"
+                                            onAction="#onDebug"
+                                            contentDisplay="LEFT">
+                                        <graphic>
+                                            <ImageView fitWidth="16" fitHeight="16">
+                                                <image>
+                                                    <Image url="@/client/icons/debug.png" />
+                                                </image>
+                                            </ImageView>
+                                        </graphic>
+                                    </Button>
 
+                                </HBox>
+                                <Label text="Debug:" styleClass="section-label" alignment="TOP_CENTER" />
+                                <VBox spacing="5" alignment="CENTER_LEFT" fillWidth="false" style="-fx-padding: 0 10 0 10;">
+                                    <HBox fx:id="debugButtonsBox" spacing="10" alignment="TOP_LEFT" prefWidth="400">
+                                        <Button fx:id="stopButton"
+                                                disable="true" onAction="#onStopDebug"
+                                                contentDisplay="LEFT" HBox.hgrow="ALWAYS" maxWidth="Infinity" >
+                                            <graphic>
+                                                <ImageView fitWidth="16" fitHeight="16">
+                                                    <image>
+                                                        <Image url="@/client/icons/stop.png" />
+                                                    </image>
+                                                </ImageView>
+                                            </graphic>
+                                        </Button>
+                                        <Button fx:id="resumeButton"
+                                                disable="true"
+                                                onAction="#onResumeDebug"
+                                                contentDisplay="LEFT" HBox.hgrow="ALWAYS" maxWidth="Infinity" >
+                                            <graphic>
+                                                <ImageView fitWidth="16" fitHeight="16">
+                                                    <image>
+                                                        <Image url="@/client/icons/resume.png" />
+                                                    </image>
+                                                </ImageView>
+                                            </graphic>
+                                        </Button>
+                                        <Button fx:id="stepOverButton"
+                                                disable="true"
+                                                onAction="#onStepOver"
+                                                contentDisplay="LEFT" HBox.hgrow="ALWAYS" maxWidth="Infinity" >
+                                            <graphic>
+                                                <ImageView fitWidth="16" fitHeight="16">
+                                                    <image>
+                                                        <Image url="@/client/icons/step_over.png" />
+                                                    </image>
+                                                </ImageView>
+                                            </graphic>
+                                        </Button>
+                                        <Button fx:id="stepBackButton"
+                                                disable="true"
+                                                onAction="#onStepBackButton"
+                                                contentDisplay="LEFT" HBox.hgrow="ALWAYS" maxWidth="Infinity" >
+                                            <graphic>
+                                                <ImageView fitWidth="16" fitHeight="16">
+                                                    <image>
+                                                        <Image url="@/client/icons/step_back.png" />
+                                                    </image>
+                                                </ImageView>
+                                            </graphic>
+                                        </Button>
+                                    </HBox>
+                                    <TableView fx:id="debugTable" prefHeight="200" prefWidth="440" VBox.vgrow="NEVER"
+                                               style="-fx-border-color: gray; -fx-border-width: 2; -fx-border-radius: 5;">
+                                        <columns>
+                                            <TableColumn text="Variable" prefWidth="200" fx:id="colVar"/>
+                                            <TableColumn text="Value" prefWidth="240" fx:id="colValue"/>
+                                        </columns>
+                                    </TableView>
+                                </VBox>
+                                <Label text="Program's History:" styleClass="section-label" alignment="TOP_CENTER"/>
+                                <VBox spacing="5" alignment="CENTER_LEFT" fillWidth="false" style="-fx-padding: 0 10 10 10;">
+                                    <TableView fx:id="historyRunTable" prefHeight="180" prefWidth="440" VBox.vgrow="NEVER"
+                                               style="-fx-border-color: gray; -fx-border-width: 2; -fx-border-radius: 5;">
+                                        <columns>
+                                            <TableColumn text="#" prefWidth="40" fx:id="colHistoryRunNumber"/>
+                                            <TableColumn text="Degree" prefWidth="50" fx:id="colHistoryRunDegree"/>
+                                            <TableColumn text="Input" prefWidth="170" fx:id="colHistoryRunInput"/>
+                                            <TableColumn text="Result" prefWidth="70" fx:id="colHistoryRunResult"/>
+                                            <TableColumn text="Cycle" prefWidth="70" fx:id="colHistoryRunCycle"/>
+                                        </columns>
+                                    </TableView>
+                                </VBox>
+                            </VBox>
+                        </TitledPane>
+                    </HBox>
+                    <HBox alignment="CENTER_RIGHT" prefWidth="Infinity" style="-fx-padding: 10 20 10 20;">
+                        <Button text="Back to Dashboard" fx:id="backToDashboard"  onAction="#onBackToDashboard"/>
+                    </HBox>
+                </VBox>
+            </content>
+        </ScrollPane>
     </center>
 
     <!-- Bottom: Status bar -->
