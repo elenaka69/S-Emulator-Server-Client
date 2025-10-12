@@ -55,7 +55,8 @@ public class Factory
 
     FunctionExecutor program;
     private List<XFunction> xFunctions;
-    private Set<String> functions = new HashSet<>();;
+    private final Set<String> functions = new HashSet<>();;
+    private final List<String> functionNamesOfProgram = new ArrayList<>();
 
     public int loadProgramFromXml(String fileName, java.io.InputStream xmlStream) throws IllegalArgumentException {
         instructionCollect  collection;
@@ -64,6 +65,7 @@ public class Factory
         program = null;
 
         functions.clear();
+        functionNamesOfProgram.clear();
 
         try {
             xProgram = loadXml(xmlStream);
@@ -81,20 +83,24 @@ public class Factory
         try {
             res = extractFunctions();
             if (res != ERROR_CODES.ERROR_OK) {
+                removeFunctions();
                 return res;
             }
         }
         catch (IllegalArgumentException e) {
             e.printStackTrace();
+            removeFunctions();
             throw e;
         }
 
         try {
             res = buildProgram(program, collection.getInstructions(), collection.getDefinedLabels());
             if (res != ERROR_CODES.ERROR_OK) {
+                removeFunctions();
                 return res;
             }
         } catch (IllegalArgumentException e) {
+            removeFunctions();
             throw e;
         }
         if (collection.getInstructions().size() == 1 && collection.getInstructions().get(0).getName().equals("NEUTRAL"))
@@ -104,6 +110,13 @@ public class Factory
         ((SprogramImpl) program).calculateCost();
         ProgramCollection.registerProgram(fileName, (SprogramImpl)program);
         return ERROR_CODES.ERROR_OK;
+    }
+
+    private void removeFunctions()
+    {
+        functionNamesOfProgram.forEach(ProgramCollection::removeFunction);
+        functionNamesOfProgram.clear();
+        functions.clear();
     }
 
     //opens the xml file and loads it into an XProgram object
@@ -176,6 +189,7 @@ public class Factory
                 sFunc = new FunctionExecutorImpl(name);
                 sFunc.setUserString(xFunc.getUserString());
                 ProgramCollection.registerFunction(name, sFunc);
+                functionNamesOfProgram.add(name);
             }
             functions.add(name);
         });

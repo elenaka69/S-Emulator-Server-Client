@@ -168,6 +168,7 @@ public class DashboardController {
                 Platform.runLater(() -> {
                     if (response.ok) {
                         showStatus("File uploaded successfully!", Alert.AlertType.INFORMATION);
+                        loadUserStatistics();
                         loadProgramsTable();
                         loadFunctionsTable();
                     } else {
