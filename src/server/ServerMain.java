@@ -7,6 +7,9 @@ import server.auth.UserManager;
 import server.auth.UserProfile;
 import server.engine.execution.ERROR_CODES;
 import server.engine.execution.EngineManager;
+import server.engine.execution.ProgramCollection;
+import server.engine.program.FunctionExecutorImpl;
+import server.engine.program.SprogramImpl;
 import shared.BaseRequest;
 import shared.BaseResponse;
 
@@ -48,6 +51,10 @@ public class ServerMain {
                 case "userStatistics" -> handleUserStatistics(req);
                 case "logout" ->handleLogout(req);
                 case "uploadFile" -> handleUploadFile(req);
+                case "ping" -> new BaseResponse(true, "pong");
+                case "getPrograms" -> handlePrograms(req);
+                case "getFunctions" -> handleFunctions(req);
+                case "executeProgram" -> handleExecuteProgram(req);
                 default -> new BaseResponse(false, "Unknown action: " + req.action);
             };
 
@@ -130,12 +137,12 @@ public class ServerMain {
     private static BaseResponse handleUserStatistics (BaseRequest req) {
         String username = (String) req.data.get("username");
 
-        Map<String, Object> statistics  = new HashMap<>();
+        Map<String, Object> statistics  = new LinkedHashMap<>();
         UserProfile profile = UserManager.getActiveUsers().get(username);
         if (profile == null || !profile.isActive()) {
             return new BaseResponse(false, "User not logged in");
         }
-        statistics .put("userName", username);
+        statistics .put("UserName", username);
         statistics .put("Number of Uploaded Programs", String.valueOf(profile.getNumberPrograms()));
         statistics .put("Number of Uploaded Functions", String.valueOf(profile.getNumberFunctions()));
         statistics .put("Current Credit Balance", String.valueOf(profile.getCredit()));
@@ -191,4 +198,44 @@ public class ServerMain {
         }
     }
 
+    private static BaseResponse handlePrograms(BaseRequest req) {
+        List<Map<String, Object>> programList = new ArrayList<>();
+        List<String> programs = ProgramCollection.getListPrograms();
+        int num = 1;
+        for (String programName : programs) {
+            SprogramImpl sprogram = ProgramCollection.getProgram(programName);
+            Map<String, Object> row = new HashMap<>();
+            row.put("number", num++);
+            row.put("programName", programName);
+            row.put("cost", sprogram.getCost());
+            programList.add(row);
+        }
+        return new BaseResponse(true, "Programs fetched successfully").add("programs", programList);
+    }
+
+    private static BaseResponse handleFunctions(BaseRequest req) {
+        List<Map<String, Object>> functionsList = new ArrayList<>();
+        List<String> functions = ProgramCollection.getListFunctions();
+        int num = 1;
+        for (String functionName : functions) {
+            FunctionExecutorImpl func = ProgramCollection.getFunction(functionName);
+            Map<String, Object> row = new HashMap<>();
+            row.put("number", num++);
+            row.put("functionName", functionName);
+            row.put("cost", func.getCost());
+            functionsList.add(row);
+        }
+        return new BaseResponse(true, "Functions fetched successfully").add("functions", functionsList);
+    }
+
+    private static BaseResponse handleExecuteProgram(BaseRequest req) {
+        String username = (String) req.data.get("username");
+        String programName = (String) req.data.get("programName");
+        UserProfile profile = UserManager.getActiveUsers().get(username);
+        if (profile == null || !profile.isActive()) {
+            return new BaseResponse(false, "User not logged in");
+
+        }
+        return new BaseResponse(true, "User not logged in");
+    }
 }

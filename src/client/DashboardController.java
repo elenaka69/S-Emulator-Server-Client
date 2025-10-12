@@ -24,10 +24,14 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import static java.lang.Thread.sleep;
+
 public class DashboardController {
 
+    private static final int REFRESH_INTERVAL = 30; // seconds
     private final HttpService http = new HttpService(); // your async HTTP helper
     private final ObjectMapper mapper = new ObjectMapper();
+
     private ScheduledExecutorService scheduler;
 
     @FXML public Label userName;
@@ -43,12 +47,23 @@ public class DashboardController {
     @FXML public TableView<StatisticUserRow>  statisticTable;
     @FXML public TableColumn<StatisticUserRow, String> colProperty;
     @FXML public TableColumn<StatisticUserRow, String> colValue;
+    public TableView<ProgramsRow> programsTable;
+    public TableColumn<ProgramsRow, Integer> colProgNumber;
+    public TableColumn<ProgramsRow, String> colProgram;
+    public TableColumn<ProgramsRow, Integer> colProgCost;
+    public TableView<FunctionRow> functionsTable;
+    public TableColumn<FunctionRow, Integer> colFuncNumber;
+    public TableColumn<FunctionRow, String> colFunction;
+    public TableColumn<FunctionRow, Integer> colFuncCost;
+
 
     private String clientUsername;
     private String selectedUser;
 
     @FXML
     public void initialize() {
+        setupTables();
+
         // Allow only digits and prevent leading zeros
         chargeAmountField.setTextFormatter(new TextFormatter<>(change -> {
             String newText = change.getControlNewText();
@@ -63,7 +78,7 @@ public class DashboardController {
         connectedUsersTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
             if (newSel != null) {
                 selectedUser = newSel.getUserName();
-                loadUserStatistics(selectedUser);
+                loadUserStatistics();
             }
         });
 
@@ -77,9 +92,6 @@ public class DashboardController {
         });
 
         startScheduler();
-
-        setupUsersTable();
-        setupstatisticTable();
     }
 
     public void startDashBoard(String username) {
@@ -100,7 +112,7 @@ public class DashboardController {
     }
 
     @FXML
-    private void onLoadFile() {
+    private void onLoadFile() throws InterruptedException {
         chooseFile();
         String filePath = filePathField.getText();
         File file = validateFile(filePath);
@@ -108,6 +120,28 @@ public class DashboardController {
             filePathField.clear();
             return;
         }
+
+        showStatus("Loading file...", Alert.AlertType.INFORMATION);
+        // Simulate progress (for demo purposes)
+        int steps = 200;
+        new Thread(() -> {
+            for (int i = 0; i <= steps; i++) {
+                double progress = (double) i / steps;
+                Platform.runLater(() -> progressBar.setProgress(progress));
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            Platform.runLater(() -> progressBar.setProgress(0.0));
+        }).start();
+
         try {
             // Read file content as bytes
             byte[] fileBytes = Files.readAllBytes(file.toPath());
@@ -123,6 +157,8 @@ public class DashboardController {
                 Platform.runLater(() -> {
                     if (response.ok) {
                         showStatus("File uploaded successfully!", Alert.AlertType.INFORMATION);
+                        loadProgramsTable();
+                        loadFunctionsTable();
                     } else {
                         showStatus("Upload failed: " + response.message, Alert.AlertType.ERROR);
                     }
@@ -132,7 +168,7 @@ public class DashboardController {
         } catch (IOException e) {
             showStatus("Failed to read file: " + e.getMessage(), Alert.AlertType.ERROR);
         }
-
+        progressBar.setProgress(0.0);
     }
 
     @FXML
@@ -168,6 +204,9 @@ public class DashboardController {
                     if (response.data != null && response.data.containsKey("newBalance")) {
                         creditsField.setText(response.data.get("newBalance").toString());
                         chargeAmountField.clear();
+                        if (selectedUser.equals(clientUsername)) {
+                            loadUserStatistics();
+                        }
                     }
                 });
             } else {
@@ -180,7 +219,7 @@ public class DashboardController {
     public void onUnselectUser(ActionEvent actionEvent) {
         connectedUsersTable.getSelectionModel().clearSelection();
         selectedUser = clientUsername;
-        loadUserStatistics(selectedUser);
+        loadUserStatistics();
     }
 
     @FXML
@@ -197,16 +236,9 @@ public class DashboardController {
             this.userName = userName;
             this.loginTime = loginTime;
         }
-
-        public Integer getNumber() {
-            return number;
-        }
-        public String getUserName() {
-            return userName;
-        }
-        public String getLoginTime() {
-            return loginTime;
-        }
+        public String getUserName() { return userName; }
+        public Integer getNumber() { return number; }
+        public String getLoginTime() { return loginTime; }
     }
 
     public static class StatisticUserRow {
@@ -217,31 +249,66 @@ public class DashboardController {
             this.property = property;
             this.value = value;
         }
-        public String getProperty() {
-            return property;
-        }
-        public String getValue() {
-            return value;
-        }
+
+        public String getProperty() {  return property; }
+        public String getValue() { return value; }
     }
 
-    private void setupUsersTable() {
+    public static class ProgramsRow {
+        private final Integer number;
+        private final String programName;
+        private final Integer cost;
+
+        public ProgramsRow(int number, String programName, Integer cost) {
+            this.number = number;
+            this.programName = programName;
+            this.cost = cost;
+        }
+        public Integer getNumber() { return number; }
+        public String getProgramName() { return programName; }
+        public Integer getCost() { return cost; }
+    }
+
+    public static class FunctionRow {
+        private final Integer number;
+        private final String funcName;
+        private final Integer cost;
+
+        public FunctionRow(int number, String funcName, Integer cost) {
+            this.number = number;
+            this.funcName = funcName;
+            this.cost = cost;
+        }
+        public Integer getNumber() { return number; }
+        public String getFunctionName() { return funcName; }
+        public Integer getCost() { return cost; }
+    }
+
+    private void setupTables() {
         colNumber.setCellValueFactory(new PropertyValueFactory<>("number"));
         colUsername.setCellValueFactory(new PropertyValueFactory<>("userName"));
         colLoginTime.setCellValueFactory(new PropertyValueFactory<>("loginTime"));
-    }
-    private void setupstatisticTable()
-    {
+
         colProperty.setCellValueFactory(new PropertyValueFactory<>("property"));
         colValue.setCellValueFactory(new PropertyValueFactory<>("value"));
+
+        colProgNumber.setCellValueFactory(new PropertyValueFactory<>("number"));
+        colProgram.setCellValueFactory(new PropertyValueFactory<>("programName"));
+        colProgCost.setCellValueFactory(new PropertyValueFactory<>("cost"));
+
+        colFuncNumber.setCellValueFactory(new PropertyValueFactory<>("number"));
+        colFunction.setCellValueFactory(new PropertyValueFactory<>("functionName"));
+        colFuncCost.setCellValueFactory(new PropertyValueFactory<>("cost"));
     }
 
     private void startScheduler() {
         scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleAtFixedRate(() -> {
             loadConnectedUsers();
-            loadUserStatistics(selectedUser);
-        }, 0, 10, TimeUnit.SECONDS);
+            loadUserStatistics();
+            loadProgramsTable();
+            loadFunctionsTable();
+        }, 0, REFRESH_INTERVAL, TimeUnit.SECONDS);
     }
 
     private void chooseFile() {
@@ -338,8 +405,8 @@ public class DashboardController {
         });
     }
 
-    private void loadUserStatistics(String username) {
-        BaseRequest req = new BaseRequest("userStatistics").add("username", username);
+    private void loadUserStatistics() {
+        BaseRequest req = new BaseRequest("userStatistics").add("username", selectedUser);
 
         sendRequest("http://localhost:8080/api", req, response -> {
             if (!response.ok) {
@@ -356,6 +423,61 @@ public class DashboardController {
                 }
 
                 statisticTable.setItems(rows);
+            });
+        });
+    }
+
+    private void loadProgramsTable() {
+        BaseRequest req = new BaseRequest("getPrograms");
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            if (!response.ok) {
+                Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+                return;
+            }
+
+            Platform.runLater(() -> {
+                List<Map<String, Object>> programs = mapper.convertValue(
+                        response.data.get("programs"),
+                        mapper.getTypeFactory().constructCollectionType(List.class, Map.class)
+                );
+                ObservableList<ProgramsRow> rows = FXCollections.observableArrayList();
+                for (Map<String, Object> p : programs) {
+                    rows.add(new ProgramsRow(
+                            (Integer) p.get("number"),
+                            (String) p.get("programName"),
+                            (Integer) p.get("cost")
+                    ));
+                }
+
+                programsTable.setItems(rows);
+            });
+        });
+    }
+    private void loadFunctionsTable() {
+        BaseRequest req = new BaseRequest("getFunctions");
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            if (!response.ok) {
+                Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+                return;
+            }
+
+            Platform.runLater(() -> {
+                List<Map<String, Object>> functions = mapper.convertValue(
+                        response.data.get("functions"),
+                        mapper.getTypeFactory().constructCollectionType(List.class, Map.class)
+                );
+                ObservableList<FunctionRow> rows = FXCollections.observableArrayList();
+                for (Map<String, Object> f : functions) {
+                    rows.add(new FunctionRow(
+                            (Integer) f.get("number"),
+                            (String) f.get("functionName"),
+                            (Integer) f.get("cost")
+                    ));
+                }
+
+                functionsTable.setItems(rows);
             });
         });
     }

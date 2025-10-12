@@ -13,7 +13,7 @@
 <?import javafx.scene.control.ProgressBar?>
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="client.DashboardController"
-            prefWidth="900" prefHeight="900"
+            prefWidth="850" prefHeight="900"
             stylesheets="@/client/css/style.css"
             styleClass="root">
 
@@ -32,7 +32,7 @@
             <!-- File selection + Load -->
             <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 0 0 0 10;">
                 <Button fx:id="loadButton" text="Load..." onAction="#onLoadFile"/>
-                <TextField fx:id="filePathField" promptText="Selected file path" prefWidth="350"/>
+                <TextField fx:id="filePathField" promptText="Selected file path" prefWidth="315"/>
                 <Region HBox.hgrow="ALWAYS"/>
 
                 <!-- Available Credits -->
@@ -42,7 +42,7 @@
                 <TextField fx:id="chargeAmountField" prefWidth="80"/>
             </HBox>
             <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 0 0 0;">
-                <ProgressBar fx:id="progressBar" prefHeight="20" prefWidth="435" progress="0.0" style="-fx-padding: 0 0 0 10;"/>
+                <ProgressBar fx:id="progressBar" prefHeight="20" prefWidth="400" progress="0.0" style="-fx-padding: 0 0 0 10;"/>
             </HBox>
         </VBox>
     </top>
@@ -97,8 +97,8 @@
                                            prefWidth="400">
                                     <columns>
                                         <TableColumn text="#" prefWidth="30" fx:id="colProgNumber"/>
-                                        <TableColumn text="Program" prefWidth="180" fx:id="colProgram"/>
-                                        <TableColumn text="Cost" prefWidth="180" fx:id="colProgCost"/>
+                                        <TableColumn text="Program" prefWidth="240" fx:id="colProgram"/>
+                                        <TableColumn text="Cost" prefWidth="130" fx:id="colProgCost"/>
                                     </columns>
                                 </TableView>
                             </VBox>
@@ -111,8 +111,8 @@
                                            prefWidth="400">
                                     <columns>
                                         <TableColumn text="#" prefWidth="30" fx:id="colFuncNumber"/>
-                                        <TableColumn text="Function" prefWidth="250" fx:id="colFunction"/>
-                                        <TableColumn text="Cost" prefWidth="150" fx:id="colFuncCost"/>
+                                        <TableColumn text="Function" prefWidth="240" fx:id="colFunction"/>
+                                        <TableColumn text="Cost" prefWidth="130" fx:id="colFuncCost"/>
                                     </columns>
                                 </TableView>
                             </VBox>
