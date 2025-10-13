@@ -15,6 +15,7 @@ import shared.BaseResponse;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 public class ExecutionController {
     private final HttpService http = new HttpService(); // your async HTTP helper
@@ -56,6 +57,7 @@ public class ExecutionController {
     private String programName;
     private int currentHighlightedStep = -1;
     private String highlightText = null;
+    private int maxDegree;
 
     public void initialize() {
         setupProgramTable();
@@ -71,8 +73,12 @@ public class ExecutionController {
         funcsComboBox.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> {
             onFuncsSelection(newValue);
         });
-    }
 
+        highlightComboBox.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> {
+            highlightText = newValue;
+            instructionTable.refresh();
+        });
+    }
 
     public void startExecutionBoard(String clientUsername, String programName) {
         this.clientUsername = clientUsername;
@@ -181,6 +187,35 @@ public class ExecutionController {
     }
 
     public void onExpand(ActionEvent actionEvent) {
+        int setDegree;
+
+        String degreeStr = expandField.getText().trim();
+        setDegree = Integer.parseInt(expandField.getText().trim());
+
+
+        if (setDegree >= maxDegree) {
+            showAlert("Invalid degree", "Max degree is " +maxDegree, Alert.AlertType.ERROR);
+            return;
+        }
+
+        historyInstrTable.getItems().clear();
+
+        BaseRequest req = new BaseRequest("expandProgram")
+                .add("username", clientUsername)
+                .add("degree", 1);
+        sendRequest("http://localhost:8080/api", req, response -> {
+            if (response.ok) {
+                Platform.runLater(() -> {
+
+                    showStatus(response.message, Alert.AlertType.INFORMATION);
+                    loadProgramInstructions();
+                    loadHighlightComboBox();
+                    setRangeDegree(setDegree+1);
+                });
+            } else {
+                Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+            }
+        });
     }
 
     public void onCollapse(ActionEvent actionEvent) {
@@ -219,6 +254,7 @@ public class ExecutionController {
                     showStatus(response.message, Alert.AlertType.INFORMATION);
                     loadProgramInstructions();
                     loadHighlightComboBox();
+                    setRangeDegree(0);
                     loadFuncsSelection();
                 });
             } else {
@@ -269,11 +305,20 @@ public class ExecutionController {
                     } else {
                         if (getIndex() == currentHighlightedStep) {
                             setStyle("-fx-background-color: lightgreen;"); // step-over
-                        } else if (highlightText != null &&
-                                (item.getLabel().contains(highlightText) || item.getInstruction().contains(highlightText))) {
-                            setStyle("-fx-background-color: #F08650; -fx-text-fill: black;"); // orange highlight
                         } else {
-                            setStyle(""); // default
+                            if (highlightText != null ) {
+                                String label = item.getLabel();
+                                String instr = item.getInstruction();
+                                boolean match =
+                                        (label != null && label.matches(".*\\b" + Pattern.quote(highlightText) + "\\b.*")) ||
+                                                (instr != null && instr.matches(".*\\b" + Pattern.quote(highlightText) + "\\b.*"));
+                                if (match) {
+                                    setStyle("-fx-background-color: #F08650; -fx-text-fill: black;"); // orange highlight
+                                }
+                                else {
+                                    setStyle(""); // default
+                                }
+                            }
                         }
                     }
                 }
@@ -337,7 +382,7 @@ public class ExecutionController {
 
     private void loadFuncsSelection() {
         BaseRequest req = new BaseRequest("getProgramFunctions")
-                .add("program", programName);
+                .add("programName", programName);
 
         sendRequest("http://localhost:8080/api", req, response -> {
             Platform.runLater(() -> {
@@ -350,7 +395,6 @@ public class ExecutionController {
                     funcsComboBox.setItems(funcList);
                     if (!funcList.isEmpty()) {
                         funcsComboBox.getSelectionModel().select(0);
-                        onFuncsSelection(funcList.get(0));
                     }
                 } else {
                     Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
@@ -360,6 +404,33 @@ public class ExecutionController {
     }
 
     private void loadHighlightComboBox() {
+        BaseRequest req = new BaseRequest("getHighlightOptions")
+                .add("username", clientUsername);
+
+        highlightComboBox.getItems().clear();
+        highlightText = "none";
+
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            Platform.runLater(() -> {
+                if (response.ok) {
+                    List<String> highlights = mapper.convertValue(
+                            response.data.get("highlightOptions"),
+                            mapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                    );
+                    ObservableList<String> highlightList = FXCollections.observableArrayList(highlights);
+                    highlightComboBox.setItems(highlightList);
+
+                    if (!highlightList.isEmpty()) {
+                        highlightComboBox.getSelectionModel().select(0);
+                        highlightText = highlightList.get(0);
+                    }
+                } else {
+                    Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+                }
+            });
+        });
+        instructionTable.refresh();
     }
 
     private void loadProgramInstructions() {
@@ -424,7 +495,45 @@ public class ExecutionController {
         });
     }
 
-    private void onFuncsSelection(String newValue) {
+    private void onFuncsSelection(String selectedFunc) {
+        if (selectedFunc == null || selectedFunc.isEmpty()) return;
+
+        historyInstrTable.getItems().clear();
+        BaseRequest req = new BaseRequest("setWokFunctionUser")
+                .add("username", clientUsername)
+                .add("funcName", selectedFunc);
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            if (response.ok) {
+                Platform.runLater(() -> {
+                    showStatus(response.message, Alert.AlertType.INFORMATION);
+                    loadProgramInstructions();
+                    loadHighlightComboBox();
+                    setRangeDegree(0);
+                });
+            } else {
+                Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+            }
+        });
+    }
+
+    private void setRangeDegree(int degree)
+    {
+        BaseRequest req = new BaseRequest("getDegreeProgram")
+                .add("username", clientUsername);
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            if (response.ok) {
+                Platform.runLater(() -> {
+                    Object val = response.data.get("degree");
+                    maxDegree = (Integer) val;
+                    expandLabel.setText("Range degrees (0–" + maxDegree + ")");
+                    expandField.setText(String.valueOf(degree));
+                });
+            } else {
+                Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+            }
+        });
     }
 
     private void sendRequest(String url, BaseRequest req, Consumer<BaseResponse> onSuccess) {

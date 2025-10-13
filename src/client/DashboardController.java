@@ -239,7 +239,7 @@ public class DashboardController {
     @FXML
     public void onExecuteProgram(ActionEvent actionEvent) {
         if (selectedProgram == null) {
-            showAlert("Program","⚠\uFE0FPlease select a program to execute.", Alert.AlertType.WARNING);
+            showAlert("Program","⚠ Please select a program to execute.", Alert.AlertType.WARNING);
             return;
         }
         if (selectedProgramCost > Integer.parseInt(creditsField.getText())) {

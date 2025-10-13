@@ -8,9 +8,11 @@ import java.util.*;
 public class SprogramImpl extends FunctionExecutorImpl {
 
     List <FunctionExecutor> functions;
+    Set<String> funcNameList;
 
     public SprogramImpl(String name) {
         super(name);
+        functions = null;
     }
 
     public void addFunction(FunctionExecutor func) {
@@ -20,24 +22,45 @@ public class SprogramImpl extends FunctionExecutorImpl {
     };
 
     public void setFunctions( Set<String> funcNameList) {
+        this.funcNameList = new HashSet<>(funcNameList);
+    }
+
+    public Set<String> getFuncNameList() {
+        return funcNameList;
+    }
+
+    public void updateFunctions() {
         if (functions == null)
             functions = new ArrayList<>();
         functions.clear();
-        funcNameList.forEach(funcName->{
-            FunctionExecutor func = ProgramCollection.getFunction(funcName);
-            if (func != null)
-                functions.add(func.myClone());
+        if (funcNameList != null) {
+            funcNameList.forEach(funcName -> {
+                FunctionExecutor func = ProgramCollection.getFunction(funcName);
+                if (func != null) {
+                    FunctionExecutor funcClone = func.myClone();
+                    funcClone.setParentProgram(this);
+                    functions.add(funcClone);
+                }
+            });
+        }
+        updateOps();
+    }
+    private void updateOps()
+    {
+        if (functions == null)
+            return;
+        updateFunctionOps();
+        functions.forEach(func->{
+            ((FunctionExecutorImpl)func).updateFunctionOps();
         });
     }
 
-    public List <FunctionExecutor> getFunctions(){ return  functions;}
-
     @Override
-    public int calculateCycles() {
+    public int getCycles() {
 
         if (functions != null) {
             functions.forEach(func->{
-                cycles += func.calculateCycles();
+                cycles += func.getCycles();
             });
         }
         return cycles;
@@ -50,11 +73,15 @@ public class SprogramImpl extends FunctionExecutorImpl {
         for (AbstractOpBasic op : opList) {
             totalPrice += op.getCredit();
         }
-        if (functions != null) {
-            for ( FunctionExecutor func : functions) {
-                totalPrice += ((FunctionExecutorImpl)func).getCost();
+
+        if (funcNameList != null) {
+            for ( String funcName : funcNameList) {
+                FunctionExecutor func = ProgramCollection.getFunction(funcName);
+                if (func != null)
+                    totalPrice += ((FunctionExecutorImpl)func).getCost();
             }
         }
+
         this.cost = totalPrice;
     }
 
@@ -99,6 +126,9 @@ public class SprogramImpl extends FunctionExecutorImpl {
         newProgram.setContext(context);
         newProgram.addLabelSet(new LinkedHashSet<>(this.labelsHashSet));
         newProgram.origVariables = new HashSet<>(this.origVariables);
+        newProgram.cost = this.cost;
+        newProgram.maxDegree = this.maxDegree;
+        newProgram.setFunctions(this.funcNameList);
 
         if (functions != null) {
             functions.forEach(func->{
@@ -106,6 +136,8 @@ public class SprogramImpl extends FunctionExecutorImpl {
                 newProgram.addFunction(newFunc);
             });
         }
+        newProgram.updateOps();
+
         return newProgram;
     }
 

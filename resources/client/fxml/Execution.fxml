@@ -33,9 +33,9 @@
                             <VBox spacing="10" alignment="TOP_CENTER" fillWidth="true" style="-fx-padding: 10;">
                                 <HBox spacing="10" alignment="CENTER_LEFT">
                                     <Label fx:id="expandLabel" text="Range Degrees"/>
-                                    <TextField fx:id="expandField" promptText="0" prefWidth="50"/>
-                                    <Button text="Expand" fx:id="expandButton" disable="true" onAction="#onExpand"/>
-                                    <Button text="Collapse" fx:id="collapseButton" disable="true" onAction="#onCollapse"/>
+                                    <TextField fx:id="expandField" promptText="0" editable="false" prefWidth="50"/>
+                                    <Button text="Expand" fx:id="expandButton" onAction="#onExpand"/>
+                                    <Button text="Collapse" fx:id="collapseButton" onAction="#onCollapse"/>
                                 </HBox>
                                 <HBox spacing="10" alignment="CENTER_LEFT">
                                     <ComboBox fx:id="funcsComboBox" prefWidth="150" editable="true"  promptText="Function Selector"/>

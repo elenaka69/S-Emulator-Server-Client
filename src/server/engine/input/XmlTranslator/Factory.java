@@ -55,7 +55,7 @@ public class Factory
 
     FunctionExecutor program;
     private List<XFunction> xFunctions;
-    private final Set<String> functions = new HashSet<>();;
+    private final Set<String> functions = new HashSet<>();
     private final List<String> functionNamesOfProgram = new ArrayList<>();
 
     public int loadProgramFromXml(String fileName, java.io.InputStream xmlStream) throws IllegalArgumentException {
@@ -451,7 +451,7 @@ public class Factory
                         else
                             targetLabel = new LabelImpl(Integer.parseInt(targetLabelName.substring(1)));
                         extractVarFromArgs( functionArguments,  inputVars,  allVars);
-                        op = new OPJumpEqualFunction(curVar, lbl, funcName, functionArguments, targetLabel, ProgramCollection.getFunction(funcName));
+                        op = new OPJumpEqualFunction(curVar, lbl, funcName, functionArguments, targetLabel);
                         break;
                     }
                     case "QUOTE": {
@@ -460,7 +460,7 @@ public class Factory
                         if (validateFunctions(funcName, functionArguments) != ERROR_CODES.ERROR_OK)
                             return ERROR_CODES.ERROR_FUNCTION_MISSING;
                         extractVarFromArgs( functionArguments,  inputVars,  allVars);
-                        op = new OPQuote(curVar, lbl, funcName, functionArguments, ProgramCollection.getFunction(funcName));
+                        op = new OPQuote(curVar, lbl, funcName, functionArguments);
                         break;
                     }
                     default:

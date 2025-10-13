@@ -29,6 +29,15 @@ public class FunctionExecutorImpl implements FunctionExecutor {
     private String userString;
     protected int cost = 0;
     protected int maxDegree;
+    private SprogramImpl parentProgram = null;
+
+    public void setParentProgram(SprogramImpl parentProgram) {
+        this.parentProgram = parentProgram;
+    }
+
+    public SprogramImpl getParentProgram() {
+        return parentProgram;
+    }
 
     public FunctionExecutorImpl(String name) {
         this.name = name;
@@ -81,7 +90,7 @@ public class FunctionExecutorImpl implements FunctionExecutor {
     @Override
     public void addLabelSet(LinkedHashSet<Label> labels) {this.labelsHashSet = labels;}
     @Override
-    public LinkedHashSet <Label> getLabelSet()    { return labelsHashSet; }
+    public List<Label> getLabelSet()    { return new ArrayList<>(context.getLabelMap().keySet());  }
 
     @Override
     public void createFirstSnap(List<Long> input) {
@@ -121,7 +130,7 @@ public class FunctionExecutorImpl implements FunctionExecutor {
     public FunctionExecutor getFunction(String functionName) {return null;};
 
     @Override
-    public int calculateCycles() {
+    public int getCycles() {
         return cycles;
     }
     public void increaseCycleCounter(int cycles) { this.cycles += cycles; }
@@ -238,6 +247,22 @@ public class FunctionExecutorImpl implements FunctionExecutor {
         }
     }
 
+    protected  void updateFunctionOps() {
+        for (AbstractOpBasic op : opList) {
+            if (op instanceof OpFunctionBase) {
+                String funName = ((OpFunctionBase) op).getFunctionName();
+                FunctionExecutor func;
+                if (parentProgram != null)
+                    func = parentProgram.getFunction(funName);
+                else
+                    func = getFunction(funName);
+                if (func != null) {
+                    ((OpFunctionBase) op).setFunction(func);
+                }
+            }
+        }
+    }
+
     @Override
     public FunctionExecutor myClone() {
         FunctionExecutorImpl newFunc = new FunctionExecutorImpl(this.name);
@@ -252,6 +277,7 @@ public class FunctionExecutorImpl implements FunctionExecutor {
         newFunc.origVariables = new HashSet<>(this.origVariables);
         newFunc.cost = this.cost;
         newFunc.maxDegree = this.maxDegree;
+        newFunc.parentProgram = this.parentProgram;
         return newFunc;
     }
 

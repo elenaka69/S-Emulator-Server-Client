@@ -1,9 +1,14 @@
 package server.auth;
 
+import server.engine.execution.ERROR_CODES;
+import server.engine.label.Label;
 import server.engine.program.FunctionExecutor;
 import server.engine.program.SprogramImpl;
+import server.engine.variable.VariableImpl;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -69,6 +74,7 @@ public class UserProfile {
         this.chosenMainProgram = program;
         this.workingFunction = program;
         this.mainProgramName = programName;
+        chosenMainProgram.updateFunctions();
     }
 
     public SprogramImpl getMainProgram() {
@@ -81,5 +87,45 @@ public class UserProfile {
 
     public String getMainProgramName() {
         return mainProgramName;
+    }
+
+    public int setWorkFunction(String funcName) {
+        if (funcName.equals(mainProgramName)) {
+            workingFunction = chosenMainProgram;
+            return ERROR_CODES.ERROR_OK;
+        }
+        Set<String> funcNameList = chosenMainProgram.getFuncNameList();
+
+        for (String func : funcNameList) {
+            if ( func.equals(funcName) ) {
+                workingFunction = chosenMainProgram.getFunction(funcName);
+                 return ERROR_CODES.ERROR_OK;
+            }
+        }
+        return ERROR_CODES.ERROR_FUNCTION_NOT_FOUND;
+    }
+
+    public int fillHighlightOptions(List<String> options) {
+        for (VariableImpl v : workingFunction.getAllVars()) {
+            options.add(v.getRepresentation());
+        }
+        for (Label label : workingFunction.getLabelSet()) {
+            options.add(label.getLabelRepresentation());
+        }
+        return ERROR_CODES.ERROR_OK;
+    }
+
+    public int getDgreeProgram() {
+        if (workingFunction != null)
+            return workingFunction.getProgramDegree();
+        return 0;
+    }
+
+    public int expandProgram(Integer degree) {
+        if (workingFunction != null) {
+            workingFunction.expandProgram(degree);
+            return ERROR_CODES.ERROR_OK;
+        }
+        return ERROR_CODES.ERROR_FUNCTION_NOT_FOUND;
     }
 }

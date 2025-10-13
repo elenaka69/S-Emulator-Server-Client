@@ -4,12 +4,16 @@ package server.engine.impl.api.synthetic;
 import server.engine.execution.ProgramCollection;
 import server.engine.impl.api.basic.OpNeutral;
 import server.engine.impl.api.skeleton.AbstractOpBasic;
+import server.engine.impl.api.skeleton.LabelJumper;
 import server.engine.impl.api.skeleton.OpData;
 import server.engine.impl.api.skeleton.functionArgs.AbstractArgument;
 import server.engine.impl.api.skeleton.functionArgs.FunctionArgument;
+import server.engine.impl.api.skeleton.functionArgs.VariableArgument;
 import server.engine.label.*;
 import server.engine.program.FunctionExecutor;
+import server.engine.program.SprogramImpl;
 import server.engine.variable.VariableImpl;
+import server.engine.variable.VariableType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,13 +29,12 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
     protected FunctionExecutor function;
     private List<FunctionExecutor> historyFunctions;
 
-    public OpFunctionBase(OpData opData, VariableImpl variable, Label label, String functionName, String arguments, FunctionExecutor function, AbstractOpBasic parent) {
+    public OpFunctionBase(OpData opData, VariableImpl variable, Label label, String functionName, String arguments, AbstractOpBasic parent) {
         super(opData, variable, label, parent);
         this.functionName = functionName;
         this.strFunctionArguments = arguments;
-        this.function = function;
+        this.function = null;
         historyFunctions = new ArrayList<>();
-        historyFunctions.add(function);
         try{
             functionArguments = AbstractArgument.parseFunctionArguments(arguments);
         } catch (IllegalArgumentException e) {
@@ -68,8 +71,10 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
         }
     }
 
-    private int calculateMaxDegree(FunctionExecutor function, List<AbstractArgument> args) {
+    private int calculateMaxDegree() {
 
+        FunctionExecutor function = ProgramCollection.getFunction(functionName);
+        List<AbstractArgument> args = functionArguments;
         if (args == null || args.isEmpty()) {
             return function.getProgramDegree() + 1;
         }
@@ -85,10 +90,9 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
     }
     public void setDegree()
     {
-        int degree = calculateMaxDegree(function, functionArguments);
+        int degree = calculateMaxDegree();
         opData.setDegree(degree);
     }
-
 
     public String getStrFunctionArguments() {
         return strFunctionArguments;
@@ -96,15 +100,6 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
 
     public FunctionExecutor getFunction() {
         return function;
-    }
-
-    protected  List<Long> convertVarToValue(FunctionExecutor program)
-    {
-        List<Long> funcVars = new ArrayList<>();
-     /*   variables.forEach( funcVar-> {
-            funcVars.add(program.getVariableValue(funcVar));
-        });*/
-        return funcVars;
     }
 
     @Override
@@ -117,6 +112,8 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
     private List<AbstractOpBasic> expanding(int expansionLevel, FunctionExecutor program)
     {
         VariableImpl resultVar = program.newWorkVar();
+
+
         List<AbstractOpBasic> ops = new ArrayList<>(expandFunction(function, resultVar, this));
 
         AbstractOpBasic finalOp = getFinalOp(resultVar, this);
@@ -142,15 +139,16 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
 
     protected void reAssignLabels(List<AbstractOpBasic> ops, FunctionExecutor func)
     {
-         // TODO : fix MainController
-        /*
+
         Map<Label, Label> labelMapOldNew = new HashMap<>();
         boolean containsExit = false;
         Label currentLabel;
         Label ExitLabel = null;
 
-        MainController controller = MainApp.getMainController();
-        SprogramImpl mainProgram = (SprogramImpl) controller.getMainProgram();
+
+        SprogramImpl mainProgram = func.getParentProgram();
+        if (mainProgram == null)
+            mainProgram = (SprogramImpl)func;
 
         for (AbstractOpBasic op: ops) {
             currentLabel = op.getLabel();
@@ -202,8 +200,6 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
             ops.getLast().setLabel(ExitLabel); //the last op is always constant assignment to result from y
             func.addLabel(ExitLabel, ops.getLast());
         }
-
-         */
     }
 
     @Override
@@ -242,11 +238,10 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
             func.addLabel(getLabel(), initOp);
 
         VariableImpl funcVar;
-        // TODO : fix MainController
-        /*
-        MainController controller = MainApp.getMainController();
-        SprogramImpl mainProgram = (SprogramImpl) controller.getMainProgram();
 
+        SprogramImpl mainProgram = func.getParentProgram();
+        if (mainProgram == null)
+            mainProgram = (SprogramImpl)func;
 
         if (functionArguments != null) {
              int idx = 0;
@@ -255,7 +250,6 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
                 funcVar = functionClone.getNextVar(idx++);
                 if (arg.getType().equals(AbstractArgument.ArgumentTypes.VARIABLE)) {
                     VariableArgument variableArgument = (VariableArgument) arg;
-                    //   VariableImpl funcVar = variableArgument.getVariable();
                     if (funcVar.getType().equals(VariableType.RESULT))
                         workVar = resultVar;
                     else
@@ -267,7 +261,8 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
                 } else {
                     FunctionArgument funcArgument = (FunctionArgument) arg;
                     workVar = mainProgram.newWorkVar();
-                    AbstractOpBasic opQuote = new OPQuote(workVar, funcArgument.getFunctionName(), funcArgument.getStrArguments(), mainProgram.getFunction(funcArgument.getFunctionName()), parent);
+                    AbstractOpBasic opQuote = new OPQuote(workVar, funcArgument.getFunctionName(), funcArgument.getStrArguments(), parent);
+                    ((OpFunctionBase) opQuote).setFunction(mainProgram.getFunction(funcArgument.getFunctionName()));
                     ops.add(opQuote);
                 }
                 vars.put(funcVar, workVar); // change key to val in function
@@ -296,7 +291,6 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
         function = functionClone;
         historyFunctions.add(functionClone);
 
-         */
         return ops;
     }
 
@@ -304,5 +298,10 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
     {
         historyFunctions.remove(historyFunctions.getLast());
         function = historyFunctions.getLast();
+    }
+
+    public void setFunction(FunctionExecutor func) {
+        function = func;
+        historyFunctions.add(function);
     }
 }

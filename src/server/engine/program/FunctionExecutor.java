@@ -13,10 +13,10 @@ public interface FunctionExecutor
     public String getName();
     FunctionExecutor getFunction(String functionName);
     void addLabelSet(LinkedHashSet<Label> labels);
-    public LinkedHashSet <Label> getLabelSet();
+    public List<Label> getLabelSet();
     void addOp(AbstractOpBasic instruction);
     List<AbstractOpBasic> getOps();
-    int calculateCycles();
+    int getCycles();
     void increaseCycleCounter(int cycles);
     void reset();
     Label newUniqueLabel();
@@ -49,8 +49,8 @@ public interface FunctionExecutor
     void init();
     void restoreOriginalVars();
     void resetSnap();
-
     List<Pair<Integer, TreeMap<VariableImpl, Long>>> run(List<Long> inputs, List <FunctionExecutor> functions);
-
     void changeInputVar(Map<VariableImpl, VariableImpl> vars);
+    void setParentProgram(SprogramImpl chosenMainProgram);
+    SprogramImpl getParentProgram();
 }

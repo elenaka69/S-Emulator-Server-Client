@@ -241,4 +241,38 @@ public class EngineManager {
         }
         return ERROR_CODES.ERROR_OK;
     }
+
+    public int getProgramFunctions(String programName, List<String> functionNames) {
+        SprogramImpl program = ProgramCollection.getProgram(programName);
+        if (program == null) return ERROR_CODES.ERROR_PROGRAM_NOT_FOUND;
+        functionNames.addAll(program.getFuncNameList());;
+        return ERROR_CODES.ERROR_OK;
+    }
+
+    public int setWokFunctionToUser(String username, String funcName) {
+        UserProfile profile = UserManager.getActiveUsers().get(username);
+        if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
+
+        return profile.setWorkFunction(funcName);
+    }
+
+    public int getHighlightOptions(String username, List<String> options) {
+        UserProfile profile = UserManager.getActiveUsers().get(username);
+        if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
+
+        return profile.fillHighlightOptions(options);
+    }
+
+    public int getDegreeProgram(String username) {
+        UserProfile profile = UserManager.getActiveUsers().get(username);
+        if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
+
+        return profile.getDgreeProgram();
+    }
+
+    public int expandProgram(String username, Integer degree) {
+        UserProfile profile = UserManager.getActiveUsers().get(username);
+        if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
+        return profile.expandProgram(degree);
+    }
 }

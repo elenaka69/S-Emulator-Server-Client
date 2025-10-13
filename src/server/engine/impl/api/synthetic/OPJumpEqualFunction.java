@@ -1,5 +1,6 @@
 package server.engine.impl.api.synthetic;
 
+import server.engine.execution.ProgramCollection;
 import server.engine.impl.api.basic.*;
 import server.engine.impl.api.skeleton.*;
 import server.engine.label.*;
@@ -12,25 +13,25 @@ import java.util.List;
 public class OPJumpEqualFunction extends OpFunctionBase implements LabelJumper {
     private  Label JEFunctionLabel;
 
-    public OPJumpEqualFunction(VariableImpl variableImpl, String functionName, String functionArguments, Label jEFunctionLabel, FunctionExecutor function) {
-        this(variableImpl, FixedLabel.EMPTY, functionName, functionArguments, jEFunctionLabel, function,  null);
+    public OPJumpEqualFunction(VariableImpl variableImpl, String functionName, String functionArguments, Label jEFunctionLabel) {
+        this(variableImpl, FixedLabel.EMPTY, functionName, functionArguments, jEFunctionLabel,  null);
     }
-    public OPJumpEqualFunction(VariableImpl variableImpl, String functionName, String functionArguments, Label jEFunctionLabel, FunctionExecutor function, AbstractOpBasic parent) {
-        this(variableImpl, FixedLabel.EMPTY, functionName, functionArguments, jEFunctionLabel, function, parent);
-    }
-
-    public OPJumpEqualFunction(VariableImpl variableImpl, Label label, String functionName, String functionArguments, Label jEFunctionLabel, FunctionExecutor function) {
-        this(variableImpl, label, functionName, functionArguments, jEFunctionLabel, function, null);
+    public OPJumpEqualFunction(VariableImpl variableImpl, String functionName, String functionArguments, Label jEFunctionLabel, AbstractOpBasic parent) {
+        this(variableImpl, FixedLabel.EMPTY, functionName, functionArguments, jEFunctionLabel, parent);
     }
 
-    public OPJumpEqualFunction(VariableImpl variableImpl, Label label, String functionName, String functionArguments, Label JEFunctionLabel, FunctionExecutor function, AbstractOpBasic parent) {
-        super(OpData.JUMP_EQUAL_FUNCTION, variableImpl, label, functionName, functionArguments, function, parent);
+    public OPJumpEqualFunction(VariableImpl variableImpl, Label label, String functionName, String functionArguments, Label jEFunctionLabel) {
+        this(variableImpl, label, functionName, functionArguments, jEFunctionLabel, null);
+    }
+
+    public OPJumpEqualFunction(VariableImpl variableImpl, Label label, String functionName, String functionArguments, Label JEFunctionLabel, AbstractOpBasic parent) {
+        super(OpData.JUMP_EQUAL_FUNCTION, variableImpl, label, functionName, functionArguments, parent);
         this.JEFunctionLabel = JEFunctionLabel;
         generateUniqId();
     }
     public OPJumpEqualFunction(OPJumpEqualFunction src)
     {
-        super(OpData.JUMP_EQUAL_FUNCTION, src.getVariable(), src.getLabel(), src.getFunctionName(), src.getStrFunctionArguments(), src.getFunction().myClone(), null);
+        super(OpData.JUMP_EQUAL_FUNCTION, src.getVariable(), src.getLabel(), src.getFunctionName(), src.getStrFunctionArguments(), null);
         this.JEFunctionLabel = src.getJEFunctionLabel();
         generateUniqId();
     }
@@ -71,7 +72,8 @@ public class OPJumpEqualFunction extends OpFunctionBase implements LabelJumper {
 
     @Override
     public String getRepresentation() {
-        return String.format("if %s = %s GOTO %s", getVariable().getRepresentation(), ((FunctionExecutorImpl)function).getUserString(), JEFunctionLabel.getLabelRepresentation());
+        String userString = ProgramCollection.getFunction(functionName).getUserString();
+        return String.format("if %s = %s GOTO %s", getVariable().getRepresentation(), userString, JEFunctionLabel.getLabelRepresentation());
     }
 
     @Override

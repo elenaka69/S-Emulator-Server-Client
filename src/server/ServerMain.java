@@ -54,6 +54,11 @@ public class ServerMain {
                 case "setProgramToUser" -> handleExecuteProgram(req);
                 case "getProgramInstructions" -> handleGetInstructions(req);
                 case "getHistoryInstruction" -> handleGetInstructionHistory(req);
+                case "getProgramFunctions" -> handleGetProgramFunctions(req);
+                case "setWokFunctionUser" -> handleSetWokFunctionUser(req);
+                case "getHighlightOptions" -> handleGetHighlightOptions(req);
+                case  "getDegreeProgram" -> handleGetDegreeProgram(req);
+                case "expandProgram" -> handleExpandProgram(req);
                 default -> new BaseResponse(false, "Unknown action: " + req.action);
             };
 
@@ -86,9 +91,8 @@ public class ServerMain {
     private static BaseResponse handleGetCredits(BaseRequest req) {
         String username = getString(req, "username");
 
-        if (!validateParameter(username)) {
+        if (!validateParameter(username))
             return new BaseResponse(false, "Invalid username");
-        }
 
         int credits = EngineManager.getInstance().getCredit(username);
         if (credits == ERROR_CODES.ERROR_USER_EXISTS)
@@ -97,7 +101,20 @@ public class ServerMain {
             return new BaseResponse(false, "Server error");
 
         return new BaseResponse(true, "Credits loaded").add("credits", credits);
+    }
 
+    private static BaseResponse handleGetDegreeProgram(BaseRequest req) {
+        String username = getString(req, "username");
+
+        if (!validateParameter(username))
+            return new BaseResponse(false, "Invalid username");
+
+        int degreeProgram = EngineManager.getInstance().getDegreeProgram(username);
+        if (degreeProgram == ERROR_CODES.ERROR_USER_EXISTS)
+            return new BaseResponse(false, "User not logged in");
+        if (degreeProgram < 0)
+            return new BaseResponse(false, "Server error");
+        return new BaseResponse(true, "Degree program loaded").add("degree", degreeProgram);
     }
 
     private static BaseResponse handleChargeCredits(BaseRequest req) {
@@ -242,12 +259,11 @@ public class ServerMain {
         String username = getString(req, "username");
         Integer instructionNumber = getInt(req, "instructionNumber");
 
-        if (!validateParameter(username)) {
+        if (!validateParameter(username))
             return new BaseResponse(false, "Invalid username");
-        }
-        if (!validateParameter(instructionNumber)) {
+
+        if (!validateParameter(instructionNumber))
             return new BaseResponse(false, "Invalid instructionNumber");
-        }
 
         List<Map<String, Object>> history = new ArrayList<>();
         int result = EngineManager.getInstance().getInstructionHistory(username, instructionNumber, history);
@@ -258,6 +274,72 @@ public class ServerMain {
             case ERROR_CODES.ERROR_INVALID_INSTRUCTION_NUMBER -> new BaseResponse(false, "Invalid instruction number");
             case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "History fetched")
                     .add("historyInstruction", history);
+            default -> new BaseResponse(false, "Server error");
+        };
+    }
+
+    private static BaseResponse handleGetProgramFunctions(BaseRequest req) {
+        String programName = getString(req, "programName");
+        if (!validateParameter(programName)) {
+            return new BaseResponse(false, "Invalid programName");
+        }
+
+        List<String> functions = new ArrayList<>();
+        functions.add(programName);
+        int result = EngineManager.getInstance().getProgramFunctions(programName, functions);
+        return switch (result) {
+            case ERROR_CODES.ERROR_PROGRAM_NOT_FOUND -> new BaseResponse(false, "Program not found");
+            case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Functions fetched")
+                    .add("functions", functions);
+            default -> new BaseResponse(false, "Server error");
+        };
+    }
+
+    private static BaseResponse handleSetWokFunctionUser(BaseRequest req) {
+        String username = getString(req, "username");
+        String funcName = getString(req, "funcName");
+
+        if (!validateParameter(username))
+            return new BaseResponse(false, "Invalid username");
+        if (!validateParameter(funcName))
+            return new BaseResponse(false, "Invalid funcName");
+
+        int result = EngineManager.getInstance().setWokFunctionToUser(username, funcName);
+        return switch (result) {
+            case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not found");
+            case ERROR_CODES.ERROR_FUNCTION_NOT_FOUND -> new BaseResponse(false, "Function not found");
+            case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Function set successfully");
+            default -> new BaseResponse(false, "Server error");
+        };
+    }
+
+    private static BaseResponse handleGetHighlightOptions(BaseRequest req) {
+        String username = getString(req, "username");
+        if (!validateParameter(username))
+            return new BaseResponse(false, "Invalid username");
+        List <String> options = new ArrayList<>();
+        options.add("none");
+        int result = EngineManager.getInstance().getHighlightOptions(username, options);
+        return switch (result) {
+            case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not found");
+            case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Options fetched")
+                    .add("highlightOptions", options);
+            default -> new BaseResponse(false, "Server error");
+        };
+    }
+
+    private static BaseResponse handleExpandProgram(BaseRequest req) {
+        String username = getString(req, "username");
+        if (!validateParameter(username))
+            return new BaseResponse(false, "Invalid username");
+        Integer degree = getInt(req, "degree");
+        if (!validateParameter(degree) || degree < 0)
+            return new BaseResponse(false, "Invalid degree");
+        int result = EngineManager.getInstance().expandProgram(username, degree);
+        return switch (result) {
+            case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not found");
+            case ERROR_CODES.ERROR_PROGRAM_NOT_FOUND -> new BaseResponse(false, "No program set for user");
+            case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Program expanded successfully");
             default -> new BaseResponse(false, "Server error");
         };
     }
