@@ -59,6 +59,7 @@ public class ServerMain {
                 case "getHighlightOptions" -> handleGetHighlightOptions(req);
                 case  "getDegreeProgram" -> handleGetDegreeProgram(req);
                 case "expandProgram" -> handleExpandProgram(req);
+                case "collapseProgram" -> handleCollapseProgram(req);
                 default -> new BaseResponse(false, "Unknown action: " + req.action);
             };
 
@@ -340,6 +341,19 @@ public class ServerMain {
             case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not found");
             case ERROR_CODES.ERROR_PROGRAM_NOT_FOUND -> new BaseResponse(false, "No program set for user");
             case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Program expanded successfully");
+            default -> new BaseResponse(false, "Server error");
+        };
+    }
+
+    private static BaseResponse handleCollapseProgram(BaseRequest req) {
+        String username = getString(req, "username");
+        if (!validateParameter(username))
+            return new BaseResponse(false, "Invalid username");
+        int result = EngineManager.getInstance().collapseProgram(username);
+        return switch (result) {
+            case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not found");
+            case ERROR_CODES.ERROR_PROGRAM_NOT_FOUND -> new BaseResponse(false, "No program set for user");
+            case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Program collapse successfully");
             default -> new BaseResponse(false, "Server error");
         };
     }

@@ -275,4 +275,10 @@ public class EngineManager {
         if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
         return profile.expandProgram(degree);
     }
+
+    public int collapseProgram(String username) {
+        UserProfile profile = UserManager.getActiveUsers().get(username);
+        if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
+        return profile.collapseProgram();
+    }
 }

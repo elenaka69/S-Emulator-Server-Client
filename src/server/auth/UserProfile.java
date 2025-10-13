@@ -128,4 +128,12 @@ public class UserProfile {
         }
         return ERROR_CODES.ERROR_FUNCTION_NOT_FOUND;
     }
+
+    public int collapseProgram() {
+        if (workingFunction != null) {
+            workingFunction.collapse();
+            return ERROR_CODES.ERROR_OK;
+        }
+        return ERROR_CODES.ERROR_FUNCTION_NOT_FOUND;
+    }
 }

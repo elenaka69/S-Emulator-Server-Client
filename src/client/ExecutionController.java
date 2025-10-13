@@ -189,9 +189,7 @@ public class ExecutionController {
     public void onExpand(ActionEvent actionEvent) {
         int setDegree;
 
-        String degreeStr = expandField.getText().trim();
         setDegree = Integer.parseInt(expandField.getText().trim());
-
 
         if (setDegree >= maxDegree) {
             showAlert("Invalid degree", "Max degree is " +maxDegree, Alert.AlertType.ERROR);
@@ -219,6 +217,33 @@ public class ExecutionController {
     }
 
     public void onCollapse(ActionEvent actionEvent) {
+        int setDegree = 1;
+
+        setDegree = Integer.parseInt(expandField.getText().trim());
+
+        if (setDegree == 0 ) {
+            showAlert("Invalid degree", "Min degree is 0", Alert.AlertType.ERROR);
+            return;
+        }
+
+        historyInstrTable.getItems().clear();
+
+        BaseRequest req = new BaseRequest("collapseProgram")
+                .add("username", clientUsername);
+        int finalSetDegree = setDegree;
+        sendRequest("http://localhost:8080/api", req, response -> {
+            if (response.ok) {
+                Platform.runLater(() -> {
+
+                    showStatus(response.message, Alert.AlertType.INFORMATION);
+                    loadProgramInstructions();
+                    loadHighlightComboBox();
+                    setRangeDegree(finalSetDegree - 1);
+                });
+            } else {
+                Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+            }
+        });
     }
 
     public void onStepBackButton(ActionEvent actionEvent) {
@@ -323,43 +348,7 @@ public class ExecutionController {
                     }
                 }
             };
-/*
-            ContextMenu contextMenu = new ContextMenu();
-            MenuItem expandAction = new MenuItem("Expand");
-            MenuItem collapseAction = new MenuItem("Collapse");
-            expandAction.setOnAction(event -> {
-                InstructionRow ir = row.getItem();
-                if (ir != null) {
-                    expandSingle(ir.getOp()); // <-- your function
-                }
-            });
-            collapseAction.setOnAction(event -> {
-                InstructionRow ir = row.getItem();
-                if (ir != null) {
-                    collapseSingle(ir.getOp()); // <-- your function
-                }
-            });
-            contextMenu.getItems().add(expandAction);
-            contextMenu.getItems().add(collapseAction);
 
-            // Show context menu only if row is not empty AND type == "S"
-            row.setOnContextMenuRequested(event -> {
-                InstructionRow ir = row.getItem();
-                if (ir != null) {
-                    contextMenu.getItems().clear(); // reset items
-
-                    if ("B".equals(ir.getType())) {
-                        contextMenu.getItems().add(collapseAction);
-                    } else {
-                        contextMenu.getItems().addAll(expandAction, collapseAction);
-                    }
-
-                    contextMenu.show(row, event.getScreenX(), event.getScreenY());
-                } else {
-                    contextMenu.hide();
-                }
-            });
-  */
             // Add breakpoint toggle on double-click
             row.setOnMouseClicked(event -> {
                 if (!row.isEmpty() && event.getClickCount() == 2) {
