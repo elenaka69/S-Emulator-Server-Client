@@ -274,6 +274,24 @@ public class DashboardController {
         }
     }
 
+    public void onLogout(ActionEvent actionEvent) {
+        logout();
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/fxml/Login.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = (Stage) usernameField.getScene().getWindow(); // reuse same stage
+            stage.setScene(new Scene(root));
+            stage.setTitle("S-Emulator – Login");
+            stage.show();
+
+        } catch (Exception e) {
+            showStatus("Failed to load login: " + e.getMessage(), Alert.AlertType.ERROR);
+            e.printStackTrace();
+        }
+    }
+
     public static class ConnectedUsersRow {
         private final Integer number;
         private final String userName;

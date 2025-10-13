@@ -43,6 +43,8 @@
             </HBox>
             <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 0 0 0;">
                 <ProgressBar fx:id="progressBar" prefHeight="20" prefWidth="400" progress="0.0" style="-fx-padding: 0 0 0 10;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="Logout" onAction="#onLogout"/>
             </HBox>
         </VBox>
     </top>
