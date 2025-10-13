@@ -66,25 +66,6 @@ public class SprogramImpl extends FunctionExecutorImpl {
         return cycles;
     }
 
-    @Override
-    public void calculateCost()
-    {
-        int totalPrice = 0;
-        for (AbstractOpBasic op : opList) {
-            totalPrice += op.getCredit();
-        }
-
-        if (funcNameList != null) {
-            for ( String funcName : funcNameList) {
-                FunctionExecutor func = ProgramCollection.getFunction(funcName);
-                if (func != null)
-                    totalPrice += ((FunctionExecutorImpl)func).getCost();
-            }
-        }
-
-        this.cost = totalPrice;
-    }
-
     public void reset() {
         this.cycles = 0;
         this.opListIndex = 0;

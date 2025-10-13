@@ -219,11 +219,12 @@ public class FunctionExecutorImpl implements FunctionExecutor {
 
     public void calculateCost()
     {
-        int totalPrice = 0;
+        int maxCost = 0;
         for (AbstractOpBasic op : opList) {
-            totalPrice += op.getCredit();
+            maxCost = Math.max(maxCost, op.getCredit());
         }
-        this.cost = totalPrice;
+
+        this.cost = maxCost;
     }
 
     public void calculateQuoteDegree() {
