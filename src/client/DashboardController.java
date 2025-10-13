@@ -119,7 +119,7 @@ public class DashboardController {
 
 
     private void onClose() {
-        logout();
+        shutdown();
         if (scheduler != null) {
             scheduler.shutdownNow(); // Stop updates when window closes
         }
@@ -402,6 +402,16 @@ public class DashboardController {
             if (response.ok) {
                 Platform.runLater(() -> showStatus("Logged out successfully", Alert.AlertType.INFORMATION));
             } else {
+                Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+            }
+        });
+    }
+
+    private void shutdown() {
+        BaseRequest req = new BaseRequest("removeUser").add("username", clientUsername);
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            if (!response.ok) {
                 Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
             }
         });

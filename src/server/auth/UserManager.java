@@ -71,4 +71,8 @@ public class UserManager {
                 user.isActive() && (now - user.getLastActive() > INACTIVE_TIMEOUT_MS)
         );
     }
+
+    public static void removeUser(String username) {
+        activeUsers.remove(username);
+    }
 }

@@ -42,11 +42,12 @@ public class ServerMain {
 
             response = switch (req.action) {
                 case "login" -> handleLogin(req);
+                case "logout" -> handleLogout(req);
+                case "removeUser" -> handleRemoveUser(req);
                 case "getCredits" -> handleGetCredits(req);
                 case "chargeCredits" -> handleChargeCredits(req);
                 case "getUsers" -> handleGetUsers(req);
                 case "userStatistics" -> handleUserStatistics(req);
-                case "logout" -> handleLogout(req);
                 case "uploadFile" -> handleUploadFile(req);
                 case "ping" -> new BaseResponse(true, "pong");
                 case "getPrograms" -> handlePrograms(req);
@@ -86,6 +87,34 @@ public class ServerMain {
             case ERROR_CODES.ERROR_USER_EXISTS -> new BaseResponse(false, "User already logged in");
             case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Welcome " + username);
             default -> new BaseResponse(false, "Server error");
+        };
+    }
+
+    private static BaseResponse handleLogout(BaseRequest req) {
+        String username = getString(req, "username");
+        if (!validateParameter(username)) {
+            return new BaseResponse(false, "Invalid username");
+        }
+
+        int result = EngineManager.getInstance().logout(username);
+        return switch (result) {
+            case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not logged in");
+            case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Logged out successfully");
+            default -> new BaseResponse(false, "Failed to logout");
+        };
+    }
+
+    private static BaseResponse handleRemoveUser(BaseRequest req) {
+        String username = getString(req, "username");
+        if (!validateParameter(username)) {
+            return new BaseResponse(false, "Invalid username");
+        }
+
+        int result = EngineManager.getInstance().removeUser(username);
+        return switch (result) {
+            case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not logged in");
+            case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Logged out successfully");
+            default -> new BaseResponse(false, "Failed to logout");
         };
     }
 
@@ -163,20 +192,6 @@ public class ServerMain {
             case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not logged in");
             case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Statistics collected").add("statistics", statistics);
             default -> new BaseResponse(false, "Failed to fetch statistics");
-        };
-    }
-
-    private static BaseResponse handleLogout(BaseRequest req) {
-        String username = getString(req, "username");
-        if (!validateParameter(username)) {
-            return new BaseResponse(false, "Invalid username");
-        }
-
-        int result = EngineManager.getInstance().logout(username);
-        return switch (result) {
-            case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not logged in");
-            case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Logged out successfully");
-            default -> new BaseResponse(false, "Failed to logout");
         };
     }
 
