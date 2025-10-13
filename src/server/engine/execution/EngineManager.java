@@ -7,7 +7,6 @@ import server.engine.input.XmlTranslator.Factory;
 import server.engine.program.FunctionExecutor;
 import server.engine.program.FunctionExecutorImpl;
 import server.engine.program.SprogramImpl;
-import shared.BaseResponse;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -16,70 +15,90 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class EngineManager {
-    private static Factory factory = new Factory();
 
-    public static int addProgram(String username, String fileName, String base64Data) {
+    private static final EngineManager INSTANCE = new EngineManager();
+    private final Factory factory;
+    private final ReentrantLock addProgramLock = new ReentrantLock();
 
+    private EngineManager() {
+        this.factory = new Factory(); // Each singleton has one Factory instance
+    }
+
+    public static EngineManager getInstance() {
+        return INSTANCE;
+    }
+
+    /**
+     * Adds a program for a user. Atomic and thread-safe.
+     */
+    public int addProgram(String username, String fileName, String base64Data) {
         UserProfile profile = UserManager.getActiveUsers().get(username);
         if (profile == null || !profile.isActive()) {
             return ERROR_CODES.ERROR_USER_NOT_FOUND;
         }
 
-        // Decode Base64 → bytes → InputStream
-        byte[] fileBytes = Base64.getDecoder().decode(base64Data);
-        try (InputStream xmlStream = new ByteArrayInputStream(fileBytes)) {
+        addProgramLock.lock();
+        try {
             if (ProgramCollection.isProgramExists(fileName)) {
                 return ERROR_CODES.ERROR_PROGRAM_EXISTS;
             }
 
-            int res;
-            int nFunctionsBefore = ProgramCollection.getListFunctions().size();
+            // Decode Base64 → bytes → InputStream
+            byte[] fileBytes = Base64.getDecoder().decode(base64Data);
+            try (InputStream xmlStream = new ByteArrayInputStream(fileBytes)) {
 
-            res = factory.loadProgramFromXml(fileName, xmlStream);
+                int nFunctionsBefore = ProgramCollection.getListFunctions().size();
+                int res = factory.loadProgramFromXml(fileName, xmlStream);
+                int nFunctionsAfter = ProgramCollection.getListFunctions().size();
 
-            int nFunctionsAfter = ProgramCollection.getListFunctions().size();
-            if (nFunctionsAfter > nFunctionsBefore)
-                UserManager.incrementFunctions(username, nFunctionsAfter - nFunctionsBefore);
+                if (nFunctionsAfter > nFunctionsBefore) {
+                    UserManager.incrementFunctions(username, nFunctionsAfter - nFunctionsBefore);
+                }
 
-            if (res == ERROR_CODES.ERROR_OK) {
-                UserManager.incrementPrograms(username);
-            } else if (res == ERROR_CODES.ERROR_FUNCTION_MISSING) {
-                return ERROR_CODES.ERROR_FUNCTION_MISSING;
+                if (res == ERROR_CODES.ERROR_OK) {
+                    UserManager.incrementPrograms(username);
+                    return ERROR_CODES.ERROR_OK;
+                } else if (res == ERROR_CODES.ERROR_FUNCTION_MISSING) {
+                    return ERROR_CODES.ERROR_FUNCTION_MISSING;
+                } else {
+                    return ERROR_CODES.ERROR_INVALID_FILE;
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                return ERROR_CODES.ERROR_INVALID_FILE;
             }
-            return ERROR_CODES.ERROR_OK;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ERROR_CODES.ERROR_INVALID_FILE;
+
+        } finally {
+            addProgramLock.unlock();
         }
     }
 
-    public static int setProgramToUser(String username, String programName) {
-        SprogramImpl program = ProgramCollection.getProgram(programName);
-        if (program == null) {
-            return ERROR_CODES.ERROR_PROGRAM_NOT_FOUND;
-        }
+    public int setProgramToUser(String username, String programName) {
         UserProfile profile = UserManager.getActiveUsers().get(username);
-        if (profile == null) {
-            return ERROR_CODES.ERROR_USER_NOT_FOUND;
-        }
-        profile.setMainProgram((SprogramImpl)program.myClone(), programName);
+        SprogramImpl program = ProgramCollection.getProgram(programName);
+
+        if (profile == null) return ERROR_CODES.ERROR_USER_NOT_FOUND;
+        if (program == null) return ERROR_CODES.ERROR_PROGRAM_NOT_FOUND;
+
+        // Clone program for user
+        profile.setMainProgram((SprogramImpl) program.myClone(), programName);
         return ERROR_CODES.ERROR_OK;
     }
 
-    public static int getProgramInstructions(String username, List<Map<String, Object>> instructions) {
+    public int getProgramInstructions(String username, List<Map<String, Object>> instructions) {
         UserProfile profile = UserManager.getActiveUsers().get(username);
-        if (profile == null) {
-            return ERROR_CODES.ERROR_USER_NOT_FOUND;
-        }
+        if (profile == null) return ERROR_CODES.ERROR_USER_NOT_FOUND;
+
         FunctionExecutor program = profile.getWorkProgram();
-        if (program == null) {
-            return ERROR_CODES.ERROR_PROGRAM_NOT_FOUND;
-        }
+        if (program == null) return ERROR_CODES.ERROR_PROGRAM_NOT_FOUND;
+
         int idx = 1;
-        AbstractOpBasic op;
         program.opListIndexReset();
+        AbstractOpBasic op;
         while ((op = program.getNextOp()) != null) {
             Map<String, Object> row = new HashMap<>();
             row.put("number", idx++);
@@ -89,83 +108,83 @@ public class EngineManager {
             row.put("cycle", op.getCycles());
             instructions.add(row);
         }
-
         return ERROR_CODES.ERROR_OK;
     }
 
-    public static int getInstructionHistory(String username, Integer instructionNumber, List<Map<String, Object>> instructions) {
+    public int getInstructionHistory(String username, Integer instructionNumber, List<Map<String, Object>> instructions) {
         UserProfile profile = UserManager.getActiveUsers().get(username);
-        if (profile == null) {
-            return ERROR_CODES.ERROR_USER_NOT_FOUND;
-        }
+        if (profile == null) return ERROR_CODES.ERROR_USER_NOT_FOUND;
+
         FunctionExecutor program = profile.getWorkProgram();
-        if (program == null) {
-            return ERROR_CODES.ERROR_PROGRAM_NOT_FOUND;
-        }
+        if (program == null) return ERROR_CODES.ERROR_PROGRAM_NOT_FOUND;
+
         if (instructionNumber < 1 || instructionNumber > program.getOps().size()) {
             return ERROR_CODES.ERROR_INVALID_INSTRUCTION_NUMBER;
         }
 
+        program.opListIndexReset();
+        AbstractOpBasic targetOp = null;
         int idx = 1;
         AbstractOpBasic op;
-        program.opListIndexReset();
         while ((op = program.getNextOp()) != null) {
             if (idx == instructionNumber) {
+                targetOp = op;
                 break;
             }
             idx++;
         }
 
         idx = 1;
-        AbstractOpBasic currOp = op;
-        while(currOp != null) {
+        while (targetOp != null) {
             Map<String, Object> row = new HashMap<>();
             row.put("number", idx++);
-            row.put("type", currOp.getType());
-            row.put("label", currOp.getLabel().getLabelRepresentation());
-            row.put("instruction", currOp.getRepresentation());
-            row.put("cycle", currOp.getCycles());
-            currOp = currOp.getParent();
+            row.put("type", targetOp.getType());
+            row.put("label", targetOp.getLabel().getLabelRepresentation());
+            row.put("instruction", targetOp.getRepresentation());
+            row.put("cycle", targetOp.getCycles());
             instructions.add(row);
+            targetOp = targetOp.getParent();
         }
+
         return ERROR_CODES.ERROR_OK;
     }
 
-    public static int addUser(String username) {
-        if (UserManager.isUserActive(username)) {
-           return ERROR_CODES.ERROR_USER_EXISTS;
-        }
+    public int addUser(String username) {
+        if (UserManager.isUserActive(username)) return ERROR_CODES.ERROR_USER_EXISTS;
 
         UserManager.addUser(username);
         return ERROR_CODES.ERROR_OK;
     }
 
-    public static int getCreadit(String username) {
+    public int getCredit(String username) {
         UserProfile profile = UserManager.getActiveUsers().get(username);
-        if (profile == null || !profile.isActive()) {
-            return ERROR_CODES.ERROR_USER_NOT_FOUND;
-        }
-        int credits = profile.getCredit();
-        return credits;
+        if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
+
+        return profile.getCredit();
     }
 
-    public static int ChargeCredits(String username, Integer amount) {
+    public int chargeCredits(String username, Integer amount) {
         UserProfile profile = UserManager.getActiveUsers().get(username);
-        if (profile == null || !profile.isActive()) {
-            return ERROR_CODES.ERROR_USER_NOT_FOUND;
+        if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
+
+        if (amount == null || amount <= 0) return ERROR_CODES.ERROR_INVALID_CREDENTIALS;
+
+        synchronized (profile) {
+            int newBalance = profile.getCredit() + amount;
+            profile.setCredit(newBalance);
+            return newBalance;
         }
-
-        if (amount == null || amount <= 0) {
-            return ERROR_CODES.ERROR_INVALID_CREDENTIALS;
-        }
-
-        int newBalance = profile.getCredit() + amount;
-        profile.setCredit(newBalance);
-
-        return newBalance;
     }
 
-    public static int fetchUsers(List<Map<String, Object>> usersList) {
+    public int logout(String username) {
+        UserProfile profile = UserManager.getActiveUsers().get(username);
+        if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
+
+        UserManager.logoutUser(username);
+        return ERROR_CODES.ERROR_OK;
+    }
+
+    public int fetchUsers(List<Map<String, Object>> usersList) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         int num = 1;
         for (Map.Entry<String, UserProfile> entry : UserManager.getActiveUsers().entrySet()) {
@@ -180,30 +199,22 @@ public class EngineManager {
         return ERROR_CODES.ERROR_OK;
     }
 
-    public static int fetchUserStatistic(String username, Map<String, Object> statistics) {
+    public int fetchUserStatistic(String username, Map<String, Object> statistics) {
         UserProfile profile = UserManager.getActiveUsers().get(username);
-        if (profile == null || !profile.isActive()) {
-            return ERROR_CODES.ERROR_USER_NOT_FOUND;
+        if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
+
+        synchronized (profile) {
+            statistics.put("UserName", username);
+            statistics.put("Number of Uploaded Programs", String.valueOf(profile.getNumberPrograms()));
+            statistics.put("Number of Uploaded Functions", String.valueOf(profile.getNumberFunctions()));
+            statistics.put("Current Credit Balance", String.valueOf(profile.getCredit()));
+            statistics.put("Total Spent Credits", String.valueOf(profile.getTotalSpentCredits()));
+            statistics.put("Total number of Executions", String.valueOf(profile.getNumberExecutions()));
         }
-        statistics .put("UserName", username);
-        statistics .put("Number of Uploaded Programs", String.valueOf(profile.getNumberPrograms()));
-        statistics .put("Number of Uploaded Functions", String.valueOf(profile.getNumberFunctions()));
-        statistics .put("Current Credit Balance", String.valueOf(profile.getCredit()));
-        statistics .put("Total Spent Credits", String.valueOf(profile.getTotalSpentCredits()));
-        statistics .put("Total number of Executions", String.valueOf(profile.getNumberExecutions()));
         return ERROR_CODES.ERROR_OK;
     }
 
-    public static int logout(String username) {
-        UserProfile profile = UserManager.getActiveUsers().get(username);
-        if (profile == null || !profile.isActive()) {
-            return ERROR_CODES.ERROR_USER_NOT_FOUND;
-        }
-        UserManager.logoutUser(username);
-        return ERROR_CODES.ERROR_OK;
-    }
-
-    public static int fetchPrograms(List<Map<String, Object>> programList) {
+    public int fetchPrograms(List<Map<String, Object>> programList) {
         List<String> programs = ProgramCollection.getListPrograms();
         int num = 1;
         for (String programName : programs) {
@@ -217,7 +228,7 @@ public class EngineManager {
         return ERROR_CODES.ERROR_OK;
     }
 
-    public static int fetchFunctions(List<Map<String, Object>> functionsList) {
+    public int fetchFunctions(List<Map<String, Object>> functionsList) {
         List<String> functions = ProgramCollection.getListFunctions();
         int num = 1;
         for (String functionName : functions) {

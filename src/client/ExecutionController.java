@@ -67,7 +67,12 @@ public class ExecutionController {
                 loadInstructionHistory(index);
             }
         });
+
+        funcsComboBox.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> {
+            onFuncsSelection(newValue);
+        });
     }
+
 
     public void startExecutionBoard(String clientUsername, String programName) {
         this.clientUsername = clientUsername;
@@ -331,6 +336,27 @@ public class ExecutionController {
     }
 
     private void loadFuncsSelection() {
+        BaseRequest req = new BaseRequest("getProgramFunctions")
+                .add("program", programName);
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            Platform.runLater(() -> {
+                if (response.ok) {
+                    List<String> functions = mapper.convertValue(
+                            response.data.get("functions"),
+                            mapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                    );
+                    ObservableList<String> funcList = FXCollections.observableArrayList(functions);
+                    funcsComboBox.setItems(funcList);
+                    if (!funcList.isEmpty()) {
+                        funcsComboBox.getSelectionModel().select(0);
+                        onFuncsSelection(funcList.get(0));
+                    }
+                } else {
+                    Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+                }
+            });
+        });
     }
 
     private void loadHighlightComboBox() {
@@ -396,6 +422,9 @@ public class ExecutionController {
                 }
             });
         });
+    }
+
+    private void onFuncsSelection(String newValue) {
     }
 
     private void sendRequest(String url, BaseRequest req, Consumer<BaseResponse> onSuccess) {

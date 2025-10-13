@@ -4,63 +4,82 @@ import server.engine.program.FunctionExecutor;
 import server.engine.program.SprogramImpl;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class UserProfile {
     private static final int CREDIT_START = 20000;
 
     private final String username;
-    private int credit = CREDIT_START;
-    private int spentCredit = 0;
     private final LocalDateTime loginTime;
-    private boolean isActive;
-    private long lastActive;
-    private int numberPrograms = 0;
-    private int numberFunctions = 0;
-    private int numberExecutions = 0;
-    private static SprogramImpl choosenMainProgram = null;
-    private static FunctionExecutor workingFunction = null;
-    private static String  mainProgramName = null;
+
+    private final AtomicInteger credit = new AtomicInteger(CREDIT_START);
+    private final AtomicInteger spentCredit = new AtomicInteger(0);
+    private final AtomicInteger numberPrograms = new AtomicInteger(0);
+    private final AtomicInteger numberFunctions = new AtomicInteger(0);
+    private final AtomicInteger numberExecutions = new AtomicInteger(0);
+    private final AtomicLong lastActive = new AtomicLong(System.currentTimeMillis());
+    private final AtomicBoolean isActive = new AtomicBoolean(true);
+
+    private volatile SprogramImpl chosenMainProgram = null;
+    private volatile FunctionExecutor workingFunction = null;
+    private volatile String mainProgramName = null;
 
     public UserProfile(String username) {
         this.username = username;
         this.loginTime = LocalDateTime.now();
-        this.lastActive = System.currentTimeMillis();
-        this.isActive = true;
     }
-    public boolean isActive() { return isActive; }
+    public boolean isActive() { return isActive.get(); }
     public void setActive(boolean active) {
-        isActive = active;
+        isActive.set(active);
         if (active)
             updateLastActive();
     }
 
-    public int getCredit() { return credit; }
-    public void setCredit(int credit) { this.credit = credit; }
-    public int getTotalSpentCredits() { return spentCredit; }
-    public void deductCredit(int amount) { this.credit -= amount; this.spentCredit += amount; }
+    public long getLastActive() { return lastActive.get(); }
+    public void updateLastActive() { this.lastActive.set(System.currentTimeMillis()); }
+
+    public int getCredit() { return credit.get(); }
+
+    public void setCredit(int amount) { credit.set(amount); }
+
+    public int getTotalSpentCredits() { return spentCredit.get(); }
+
+    public void deductCredit(int amount) {
+        if (amount > 0) {
+            credit.addAndGet(-amount);
+            spentCredit.addAndGet(amount);
+        }
+    }
 
     public String getUsername() { return username; }
     public LocalDateTime getLoginTime() { return loginTime; }
 
-    public long getLastActive() { return lastActive; }
-    public void updateLastActive() { this.lastActive = System.currentTimeMillis(); }
+    public int getNumberPrograms() { return numberPrograms.get(); }
+    public int getNumberFunctions() { return numberFunctions.get(); }
+    public int getNumberExecutions() { return numberExecutions.get(); }
+    public void incrementPrograms() { numberPrograms.incrementAndGet(); }
+    public void incrementFunctions(int nFunc) {
+        if (nFunc > 0) numberFunctions.addAndGet(nFunc);
+    }
+    public void incrementExecutions() { numberExecutions.incrementAndGet(); }
 
-    public int getNumberPrograms() { return numberPrograms; }
-    public int getNumberFunctions() {  return numberFunctions; }
-    public void incrementPrograms() { numberPrograms++; }
-    public void incrementFunctions(int nFunc) { numberFunctions += nFunc; }
+    public synchronized void setMainProgram(SprogramImpl program, String programName) {
+        this.chosenMainProgram = program;
+        this.workingFunction = program;
+        this.mainProgramName = programName;
+    }
 
-    public int getNumberExecutions() { return numberExecutions; }
-
-    public void setNumberExecutions(int numberExecutions) { this.numberExecutions = numberExecutions; }
-
-    public void setMainProgram(SprogramImpl program, String programName) {
-        choosenMainProgram = program;
-        workingFunction = choosenMainProgram;
-        mainProgramName = programName;
+    public SprogramImpl getMainProgram() {
+        return chosenMainProgram;
     }
 
     public FunctionExecutor getWorkProgram() {
         return workingFunction;
+    }
+
+    public String getMainProgramName() {
+        return mainProgramName;
     }
 }

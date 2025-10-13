@@ -38,8 +38,8 @@
                                     <Button text="Collapse" fx:id="collapseButton" disable="true" onAction="#onCollapse"/>
                                 </HBox>
                                 <HBox spacing="10" alignment="CENTER_LEFT">
-                                    <ComboBox fx:id="funcsComboBox" prefWidth="150" editable="true" disable="true" promptText="Function Selector"/>
-                                    <ComboBox fx:id="highlightComboBox" prefWidth="150" editable="true" disable="true" promptText="Highlight selection"/>
+                                    <ComboBox fx:id="funcsComboBox" prefWidth="150" editable="true"  promptText="Function Selector"/>
+                                    <ComboBox fx:id="highlightComboBox" prefWidth="150" editable="true"  promptText="Highlight selection"/>
                                 </HBox>
                                 <!-- Label + Table -->
                                 <Label text="Program Instructions:" styleClass="section-label" alignment="TOP_CENTER"/>
