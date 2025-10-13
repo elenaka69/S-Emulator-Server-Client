@@ -43,18 +43,18 @@
             </HBox>
             <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 0 0 0;">
                 <ProgressBar fx:id="progressBar" prefHeight="20" prefWidth="400" progress="0.0" style="-fx-padding: 0 0 0 10;"/>
-                <Region HBox.hgrow="ALWAYS"/>
-                <Button text="Logout" onAction="#onLogout"/>
-            </HBox>
-        </VBox>
-    </top>
+            <!--        <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="Logout" onAction="#onLogout"/>-->
+                </HBox>
+            </VBox>
+        </top>
 
 
-    <center>
-        <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-padding: 0 10 10 0;">
-            <content>
-                <VBox spacing="10" alignment="TOP_CENTER">
-                <!-- Users / Programs modules side-by-side -->
+        <center>
+            <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-padding: 0 10 10 0;">
+                <content>
+                    <VBox spacing="10" alignment="TOP_CENTER">
+                    <!-- Users / Programs modules side-by-side -->
                 <HBox spacing="10" alignment="TOP_LEFT" style="-fx-padding: 0 0 0 20;">
                 <!-- Users Module -->
                     <TitledPane text="Users" collapsible="false" prefWidth="400" >

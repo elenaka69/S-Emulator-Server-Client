@@ -6,8 +6,12 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.stage.Stage;
 import server.engine.impl.api.skeleton.AbstractOpBasic;
 import shared.BaseRequest;
 import shared.BaseResponse;
@@ -265,6 +269,22 @@ public class ExecutionController {
     }
 
     public void onBackToDashboard(ActionEvent actionEvent) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/client/fxml/Dashboard.fxml"));
+            Parent root = loader.load();
+
+            DashboardController controller = loader.getController();
+            controller.startDashBoard(clientUsername);
+
+            Stage stage = (Stage) usernameField.getScene().getWindow(); // reuse same stage
+            stage.setScene(new Scene(root));
+            stage.setTitle("S-Emulator – Login");
+            stage.show();
+
+        } catch (Exception e) {
+            showStatus("Failed to load login: " + e.getMessage(), Alert.AlertType.ERROR);
+            e.printStackTrace();
+        }
     }
 
     private void setProgramToUser() {
