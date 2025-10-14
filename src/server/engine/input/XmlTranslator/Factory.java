@@ -58,7 +58,7 @@ public class Factory
     private final Set<String> functions = new HashSet<>();
     private final List<String> functionNamesOfProgram = new ArrayList<>();
 
-    public int loadProgramFromXml(String fileName, java.io.InputStream xmlStream) throws IllegalArgumentException {
+    public int loadProgramFromXml(String username, String fileName, java.io.InputStream xmlStream) throws IllegalArgumentException {
         instructionCollect  collection;
         int res;
 
@@ -108,7 +108,7 @@ public class Factory
 
         ((SprogramImpl)program).setFunctions(functions);
         ((SprogramImpl) program).calculateCost();
-        ProgramCollection.registerProgram(fileName, (SprogramImpl)program);
+        ProgramCollection.registerProgram(username, fileName, program);
         return ERROR_CODES.ERROR_OK;
     }
 

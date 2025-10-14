@@ -52,7 +52,7 @@ public class EngineManager {
             try (InputStream xmlStream = new ByteArrayInputStream(fileBytes)) {
 
                 int nFunctionsBefore = ProgramCollection.getListFunctions().size();
-                int res = factory.loadProgramFromXml(fileName, xmlStream);
+                int res = factory.loadProgramFromXml(username, fileName, xmlStream);
                 int nFunctionsAfter = ProgramCollection.getListFunctions().size();
 
                 if (nFunctionsAfter > nFunctionsBefore) {
@@ -228,16 +228,22 @@ public class EngineManager {
     }
 
     public int fetchPrograms(List<Map<String, Object>> programList) {
-        List<String> programs = ProgramCollection.getListPrograms();
+
+        Map<String, ProgramProperty> programs = ProgramCollection.getPrograms();
         int num = 1;
-        for (String programName : programs) {
-            SprogramImpl sprogram = ProgramCollection.getProgram(programName);
+        for (Map.Entry<String, ProgramProperty> entry : programs.entrySet()) {
+            ProgramProperty prop = entry.getValue();
             Map<String, Object> row = new HashMap<>();
             row.put("number", num++);
-            row.put("programName", programName);
-            row.put("cost", sprogram.getCost());
+            row.put("name", entry.getKey());
+            row.put("userName", prop.getUsername());
+            row.put("numInstructions", prop.getNumInstructions());
+            row.put("maxCost", prop.getMaxCost());
+            row.put("numExec", prop.getNumExecs());
+            row.put("averCost", prop.getAverageCost());
             programList.add(row);
         }
+
         return ERROR_CODES.ERROR_OK;
     }
 

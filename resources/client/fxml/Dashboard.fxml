@@ -13,7 +13,7 @@
 <?import javafx.scene.control.ProgressBar?>
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="client.DashboardController"
-            prefWidth="850" prefHeight="900"
+            prefWidth="950" prefHeight="900"
             stylesheets="@/client/css/style.css"
             styleClass="root">
 
@@ -57,12 +57,12 @@
                     <!-- Users / Programs modules side-by-side -->
                 <HBox spacing="10" alignment="TOP_LEFT" style="-fx-padding: 0 0 0 20;">
                 <!-- Users Module -->
-                    <TitledPane text="Users" collapsible="false" prefWidth="500" >
+                    <TitledPane text="Users" collapsible="false" prefWidth="550" >
                         <VBox spacing="10" alignment="TOP_CENTER" fillWidth="true" style="-fx-padding: 10;">
 
                             <!-- Connected Users Table -->
                             <Label text="Available Users" styleClass="section-label" alignment="TOP_CENTER"/>
-                            <VBox spacing="5" alignment="CENTER_LEFT" fillWidth="false">
+                            <VBox spacing="5" alignment="CENTER" fillWidth="false">
                                 <TableView fx:id="connectedUsersTable" prefHeight="300" VBox.vgrow="ALWAYS"
                                            style="-fx-border-color: gray; -fx-border-width: 2; -fx-border-radius: 5;"
                                            prefWidth="400">
@@ -80,14 +80,14 @@
                             <Button text="Unselect User" onAction="#onUnselectUser"/>
                             <!-- Statistics Table -->
                             <Label text="Statistics" styleClass="section-label" alignment="TOP_CENTER"/>
-                            <VBox spacing="5" alignment="CENTER_LEFT" fillWidth="false">
+                            <VBox spacing="5" alignment="CENTER" fillWidth="false">
                                 <TableView fx:id="statisticTable" prefHeight="300" VBox.vgrow="ALWAYS"
                                            style="-fx-border-color: gray; -fx-border-width: 2; -fx-border-radius: 5;"
                                            prefWidth="400">
                                     <columns>
                                         <TableColumn text="#" prefWidth="30" fx:id="colStatNumber"/>
-                                        <TableColumn text="Type" prefWidth="120" fx:id="colStatType"/>
-                                        <TableColumn text="Name" prefWidth="50" fx:id="colStatName"/>
+                                        <TableColumn text="Type" prefWidth="60" fx:id="colStatType"/>
+                                        <TableColumn text="Name" prefWidth="110" fx:id="colStatName"/>
                                         <TableColumn text="Arch" prefWidth="50" fx:id="colStatArch"/>
                                         <TableColumn text="Degree" prefWidth="50" fx:id="colStatDegree"/>
                                         <TableColumn text="Result" prefWidth="50" fx:id="colStatResult"/>
@@ -98,26 +98,30 @@
                         </VBox>
                     </TitledPane>
                     <!-- Programs Module -->
-                    <TitledPane text="Programs" collapsible="false" HBox.hgrow="ALWAYS">
+                    <TitledPane text="Programs" collapsible="false" prefWidth="550" HBox.hgrow="ALWAYS">
                         <VBox spacing="10" alignment="TOP_CENTER" fillWidth="true" style="-fx-padding: 10;">
 
                             <!-- Loaded Programs Table -->
                             <Label text="Available programs" styleClass="section-label" alignment="TOP_CENTER"/>
-                            <VBox spacing="5" alignment="CENTER_LEFT" fillWidth="false">
+                            <VBox spacing="5" alignment="CENTER" fillWidth="false">
                                 <TableView fx:id="programsTable" prefHeight="300" VBox.vgrow="ALWAYS"
                                            style="-fx-border-color: gray; -fx-border-width: 2; -fx-border-radius: 5;"
                                            prefWidth="400">
                                     <columns>
                                         <TableColumn text="#" prefWidth="30" fx:id="colProgNumber"/>
-                                        <TableColumn text="Program" prefWidth="240" fx:id="colProgram"/>
-                                        <TableColumn text="Cost" prefWidth="130" fx:id="colProgCost"/>
+                                        <TableColumn text="Name" prefWidth="85" fx:id="colProgramName"/>
+                                        <TableColumn text="User" prefWidth="80" fx:id="colProgramUserName"/>
+                                        <TableColumn text="#Inst" prefWidth="50" fx:id="colProgramNumInstr"/>
+                                        <TableColumn text="Max&#10;Cost" prefWidth="50" fx:id="colProgMaxCost"/>
+                                        <TableColumn text="#Exec" prefWidth="50" fx:id="colProgramNumExec"/>
+                                        <TableColumn text="Aver&#10;Cost" prefWidth="50" fx:id="colProgramAverCost"/>
                                     </columns>
                                 </TableView>
                             </VBox>
                             <Button text="Execute Program" onAction="#onExecuteProgram"/>
                             <!-- Loaded Functions Table -->
                             <Label text="Available functions" styleClass="section-label" alignment="TOP_CENTER"/>
-                            <VBox spacing="5" alignment="CENTER_LEFT" fillWidth="false">
+                            <VBox spacing="5" alignment="CENTER" fillWidth="false">
                                 <TableView fx:id="functionsTable" prefHeight="300" VBox.vgrow="ALWAYS"
                                            style="-fx-border-color: gray; -fx-border-width: 2; -fx-border-radius: 5;"
                                            prefWidth="400">

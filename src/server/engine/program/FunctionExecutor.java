@@ -16,7 +16,11 @@ public interface FunctionExecutor
     public List<Label> getLabelSet();
     void addOp(AbstractOpBasic instruction);
     List<AbstractOpBasic> getOps();
+    int getNumInstuctions();
     int getCycles();
+    int getCost();
+    int getAverageCost();
+    void setAverageCost(int averageCost);
     void increaseCycleCounter(int cycles);
     void reset();
     Label newUniqueLabel();

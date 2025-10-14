@@ -61,9 +61,14 @@ public class DashboardController {
     @FXML public TableColumn<StatisticUserRow, Integer> colStatCycles;
 
     public TableView<ProgramsRow> programsTable;
-    public TableColumn<ProgramsRow, Integer> colProgNumber;
-    public TableColumn<ProgramsRow, String> colProgram;
-    public TableColumn<ProgramsRow, Integer> colProgCost;
+    @FXML private TableColumn<ProgramsRow, Integer> colProgNumber;
+    @FXML private TableColumn<ProgramsRow, String> colProgramName;
+    @FXML private TableColumn<ProgramsRow, String> colProgramUserName;
+    @FXML private TableColumn<ProgramsRow, Integer> colProgramNumInstr;
+    @FXML private TableColumn<ProgramsRow, Integer> colProgMaxCost;
+    @FXML private TableColumn<ProgramsRow, Integer> colProgramNumExec;
+    @FXML private TableColumn<ProgramsRow, Integer> colProgramAverCost;
+
     public TableView<FunctionRow> functionsTable;
     public TableColumn<FunctionRow, Integer> colFuncNumber;
     public TableColumn<FunctionRow, String> colFunction;
@@ -107,8 +112,8 @@ public class DashboardController {
 
         programsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
             if (newSel != null) {
-                selectedProgramCost = newSel.getCost();
-                selectedProgram = newSel.getProgramName();
+                selectedProgramCost = newSel.getMaxCost(); // TODO chane to average cost?
+                selectedProgram = newSel.getName();
             } else {
                 selectedProgram = null;
                 selectedProgramCost = 0;
@@ -361,19 +366,33 @@ public class DashboardController {
         public int getCycles() { return cycles; }
     }
 
-    public static class ProgramsRow {
-        private final Integer number;
-        private final String programName;
-        private final Integer cost;
+    public class ProgramsRow {
+        private final int number;
+        private final String name;
+        private final String userName;
+        private final int numInstructions;
+        private final int maxCost;
+        private final int numExec;
+        private final int averCost;
 
-        public ProgramsRow(int number, String programName, Integer cost) {
+        public ProgramsRow(int number, String name, String userName,
+                           int numInstructions, int maxCost, int numExec, int averCost) {
             this.number = number;
-            this.programName = programName;
-            this.cost = cost;
+            this.name = name;
+            this.userName = userName;
+            this.numInstructions = numInstructions;
+            this.maxCost = maxCost;
+            this.numExec = numExec;
+            this.averCost = averCost;
         }
-        public Integer getNumber() { return number; }
-        public String getProgramName() { return programName; }
-        public Integer getCost() { return cost; }
+
+        public int getNumber() { return number; }
+        public String getName() { return name; }
+        public String getUserName() { return userName; }
+        public int getNumInstructions() { return numInstructions; }
+        public int getMaxCost() { return maxCost; }
+        public int getNumExec() { return numExec; }
+        public int getAverCost() { return averCost; }
     }
 
     public static class FunctionRow {
@@ -409,8 +428,12 @@ public class DashboardController {
         colStatCycles.setCellValueFactory(new PropertyValueFactory<>("cycles"));
 
         colProgNumber.setCellValueFactory(new PropertyValueFactory<>("number"));
-        colProgram.setCellValueFactory(new PropertyValueFactory<>("programName"));
-        colProgCost.setCellValueFactory(new PropertyValueFactory<>("cost"));
+        colProgramName.setCellValueFactory(new PropertyValueFactory<>("name"));
+        colProgramUserName.setCellValueFactory(new PropertyValueFactory<>("userName"));
+        colProgramNumInstr.setCellValueFactory(new PropertyValueFactory<>("numInstructions"));
+        colProgMaxCost.setCellValueFactory(new PropertyValueFactory<>("maxCost"));
+        colProgramNumExec.setCellValueFactory(new PropertyValueFactory<>("numExec"));
+        colProgramAverCost.setCellValueFactory(new PropertyValueFactory<>("averCost"));
 
         colFuncNumber.setCellValueFactory(new PropertyValueFactory<>("number"));
         colFunction.setCellValueFactory(new PropertyValueFactory<>("functionName"));
@@ -585,12 +608,17 @@ public class DashboardController {
                 for (Map<String, Object> p : programs) {
                     rows.add(new ProgramsRow(
                             (Integer) p.get("number"),
-                            (String) p.get("programName"),
-                            (Integer) p.get("cost")
+                            (String) p.get("name"),
+                            (String) p.get("userName"),
+                            (Integer) p.get("numInstructions"),
+                            (Integer) p.get("maxCost"),
+                            (Integer) p.get("numExec"),
+                            (Integer) p.get("averCost")
                     ));
                 }
 
                 programsTable.setItems(rows);
+                loadConnectedUsers();
             });
         });
     }
@@ -618,6 +646,7 @@ public class DashboardController {
                 }
 
                 functionsTable.setItems(rows);
+                loadConnectedUsers();
             });
         });
     }
