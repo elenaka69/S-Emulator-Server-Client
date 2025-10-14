@@ -65,7 +65,8 @@ public class ServerMain {
                 case "expandProgram" -> handleExpandProgram(req);
                 case "collapseProgram" -> handleCollapseProgram(req);
                 case "getProgramInputVariables" -> handleGetProgramInputVariables(req);
-                case "runProgram" ->hanleRunProgram(req);
+                case "runProgram" -> hanleRunProgram(req);
+                case "getRunStatistic" -> handleGetRunStatistic(req);
                 default -> new BaseResponse(false, "Unknown action: " + req.action);
             };
 
@@ -416,6 +417,23 @@ public class ServerMain {
             case ERROR_CODES.ERROR_INVALID_INPUT_VARIABLES -> new BaseResponse(false, "Invalid input variables");
             case ERROR_CODES.ERROR_NOT_ENOUGH_CREDIT -> new BaseResponse(false, "Insufficient credits");
             case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Program executed successfully").add("runListMap", executionDetails);
+            default -> new BaseResponse(false, "Server error");
+        };
+    }
+
+    private static BaseResponse handleGetRunStatistic(BaseRequest req) {
+        String username = getString(req, "username");
+        if (!validateParameter(username))
+            return new BaseResponse(false, "Invalid username");
+
+        List<Long> runStatistics = new ArrayList<>();
+        int result = EngineManager.getInstance().getRunStatistics(username, runStatistics);
+        return switch (result) {
+            case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not found");
+            case ERROR_CODES.ERROR_PROGRAM_NOT_FOUND -> new BaseResponse(false, "No program set for user");
+            case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Run statistics fetched successfully")
+                    .add("result", runStatistics.get(0))
+                    .add("cycles", runStatistics.get(1));
             default -> new BaseResponse(false, "Server error");
         };
     }

@@ -70,6 +70,7 @@ public class ExecutionController {
     @FXML private TableColumn<ProgramHistoryRow, Integer> colHistoryRunResult;
     @FXML private TableColumn<ProgramHistoryRow, Integer> colHistoryRunCycle;
     private final List<TextField> paramFields = new ArrayList<>();
+    private List<String> inputVariables = new ArrayList<>();
     private List<ExecutionStep> runListMap;
 
     private String clientUsername;
@@ -77,12 +78,15 @@ public class ExecutionController {
     private int currentHighlightedStep = -1;
     private String highlightText = null;
     private int maxDegree;
+    private int runHistoryCounter = 0;
+    private final ObservableList<ProgramHistoryRow> historyRunData = FXCollections.observableArrayList();
 
     public void initialize() {
         setupProgramTable();
         setupHistoryTable();
         setupWatchDebugTable();
         setupProgramHistory();
+        historyRunTable.setItems(historyRunData);
 
         instructionTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
@@ -328,6 +332,7 @@ public class ExecutionController {
                             return;
                         }
                         populateDebugTable(runListMap.size() - 1);
+                        setStatistics();
                         showStatus(response.message, Alert.AlertType.INFORMATION);
                     });
                 } else {
@@ -335,6 +340,47 @@ public class ExecutionController {
                 }
             });
         }
+    }
+
+    private void updateProgramStatisticTable(long result, int cycles)
+    {
+        runHistoryCounter++;
+
+        int degree = Integer.parseInt(expandField.getText().trim());
+        StringBuilder sb = new StringBuilder();
+        int i = 0;
+        for (TextField field : paramFields) {
+            String text = field.getText();
+            String varName = inputVariables.get(i++);
+            long value = !text.isEmpty() ? Long.parseLong(text) : 0;
+            sb.append(varName).append(" = ").append(value).append("   ");
+        }
+
+        historyRunData.add(new ProgramHistoryRow(
+                runHistoryCounter,
+                degree,
+                sb.toString(),
+                result,
+                cycles
+        ));
+    }
+    private void setStatistics() {
+        BaseRequest req = new BaseRequest("getRunStatistic").add("username", clientUsername);
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            if (response.ok) {
+                Object resultVal = response.data.get("result");
+                Object cyclesVal = response.data.get("cycles");
+                long result = resultVal != null ? ((Number) resultVal).longValue() : 0;
+                int cycles = cyclesVal != null ? (Integer) cyclesVal : 0;
+                updateProgramStatisticTable(result,cycles);
+
+            } else {
+                Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+            }
+        });
+
+
     }
 
     private int populateDebugTable(int stepIndex) {
@@ -741,6 +787,7 @@ public class ExecutionController {
 
         if (variables == null || variables.isEmpty())
             return;
+        inputVariables.addAll(variables);
 
         Label paramLabel = new Label("Enter variables");
         paramLabel.setAlignment(Pos.CENTER);
@@ -748,6 +795,8 @@ public class ExecutionController {
         // Create a new HBox to hold TextFields
         HBox fieldsBox = new HBox(10);
         fieldsBox.setAlignment(Pos.CENTER);
+
+
 
         for (String varName : variables) {
             TextField field = createIntegerField();

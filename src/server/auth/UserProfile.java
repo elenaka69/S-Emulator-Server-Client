@@ -170,5 +170,14 @@ public class UserProfile {
         }
         return ERROR_CODES.ERROR_OK;
     }
+
+    public int getRunStatistics(List<Long> runStatistics) {
+        if (workingFunction != null) {
+            runStatistics.add(workingFunction.getVariableValue(VariableImpl.RESULT));
+            runStatistics.add((long) workingFunction.getCycles());
+            return ERROR_CODES.ERROR_OK;
+        }
+        return ERROR_CODES.ERROR_FUNCTION_NOT_FOUND;
+    }
 }
 
