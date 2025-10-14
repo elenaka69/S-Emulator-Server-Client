@@ -85,8 +85,13 @@
                                            style="-fx-border-color: gray; -fx-border-width: 2; -fx-border-radius: 5;"
                                            prefWidth="400">
                                     <columns>
-                                        <TableColumn text="Property" prefWidth="240" fx:id="colProperty"/>
-                                        <TableColumn text="Value" prefWidth="130" fx:id="colValue"/>
+                                        <TableColumn text="#" prefWidth="30" fx:id="colStatNumber"/>
+                                        <TableColumn text="Type" prefWidth="120" fx:id="colStatType"/>
+                                        <TableColumn text="Name" prefWidth="50" fx:id="colStatName"/>
+                                        <TableColumn text="Arch" prefWidth="50" fx:id="colStatArch"/>
+                                        <TableColumn text="Degree" prefWidth="50" fx:id="colStatDegree"/>
+                                        <TableColumn text="Result" prefWidth="50" fx:id="colStatResult"/>
+                                        <TableColumn text="Cycles" prefWidth="50" fx:id="colStatCycles"/>
                                     </columns>
                                 </TableView>
                             </VBox>

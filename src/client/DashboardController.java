@@ -52,8 +52,14 @@ public class DashboardController {
     @FXML public TableColumn<ConnectedUsersRow, Integer> colSpentCredits;
     @FXML public TableColumn<ConnectedUsersRow, Integer> colNumExecutions;
     @FXML public TableView<StatisticUserRow>  statisticTable;
-    @FXML public TableColumn<StatisticUserRow, String> colProperty;
-    @FXML public TableColumn<StatisticUserRow, String> colValue;
+    @FXML public TableColumn<StatisticUserRow, Integer> colStatNumber;
+    @FXML public TableColumn<StatisticUserRow, String> colStatType;
+    @FXML public TableColumn<StatisticUserRow, String> colStatName;
+    @FXML public TableColumn<StatisticUserRow, String> colStatArch;
+    @FXML public TableColumn<StatisticUserRow, Integer> colStatDegree;
+    @FXML public TableColumn<StatisticUserRow, Integer> colStatResult;
+    @FXML public TableColumn<StatisticUserRow, Integer> colStatCycles;
+
     public TableView<ProgramsRow> programsTable;
     public TableColumn<ProgramsRow, Integer> colProgNumber;
     public TableColumn<ProgramsRow, String> colProgram;
@@ -119,6 +125,7 @@ public class DashboardController {
         showStatus("Logged in as: " + username, Alert.AlertType.INFORMATION);
         loadUserCredits();
         loadConnectedUsers();
+        loadUserStatistics();
     }
 
 
@@ -224,7 +231,6 @@ public class DashboardController {
                         chargeAmountField.clear();
                         if (selectedUser.equals(clientUsername)) {
                             loadConnectedUsers();
-                            loadUserStatistics();
                         }
                     }
                 });
@@ -327,16 +333,32 @@ public class DashboardController {
     }
 
     public static class StatisticUserRow {
-        private final String property;
-        private final String value;
+        private final int number;
+        private final String type;
+        private final String name;
+        private final String arch;
+        private final int degree;
+        private final int result;
+        private final int cycles;
 
-        public StatisticUserRow(String property, String value) {
-            this.property = property;
-            this.value = value;
+        public StatisticUserRow(int number, String type, String name, String arch,
+                                int degree, int result, int cycles) {
+            this.number = number;
+            this.type = type;
+            this.name = name;
+            this.arch = arch;
+            this.degree = degree;
+            this.result = result;
+            this.cycles = cycles;
         }
 
-        public String getProperty() {  return property; }
-        public String getValue() { return value; }
+        public int getNumber() { return number; }
+        public String getType() { return type; }
+        public String getName() { return name; }
+        public String getArch() { return arch; }
+        public int getDegree() { return degree; }
+        public int getResult() { return result; }
+        public int getCycles() { return cycles; }
     }
 
     public static class ProgramsRow {
@@ -378,8 +400,13 @@ public class DashboardController {
         colSpentCredits.setCellValueFactory(new PropertyValueFactory<>("spentCredits"));
         colNumExecutions.setCellValueFactory(new PropertyValueFactory<>("executions"));
 
-        colProperty.setCellValueFactory(new PropertyValueFactory<>("property"));
-        colValue.setCellValueFactory(new PropertyValueFactory<>("value"));
+        colStatNumber.setCellValueFactory(new PropertyValueFactory<>("number"));
+        colStatType.setCellValueFactory(new PropertyValueFactory<>("type"));
+        colStatName.setCellValueFactory(new PropertyValueFactory<>("name"));
+        colStatArch.setCellValueFactory(new PropertyValueFactory<>("arch"));
+        colStatDegree.setCellValueFactory(new PropertyValueFactory<>("degree"));
+        colStatResult.setCellValueFactory(new PropertyValueFactory<>("result"));
+        colStatCycles.setCellValueFactory(new PropertyValueFactory<>("cycles"));
 
         colProgNumber.setCellValueFactory(new PropertyValueFactory<>("number"));
         colProgram.setCellValueFactory(new PropertyValueFactory<>("programName"));
@@ -394,7 +421,6 @@ public class DashboardController {
         scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleAtFixedRate(() -> {
             loadConnectedUsers();
-            loadUserStatistics();
             loadProgramsTable();
             loadFunctionsTable();
         }, 0, REFRESH_INTERVAL, TimeUnit.SECONDS);
@@ -518,11 +544,22 @@ public class DashboardController {
             }
 
             Platform.runLater(() -> {
-                Map<String, Object> statsMap = (Map<String, Object>) response.data.get("statistics");
+                List<Map<String, Object>> statsMap = mapper.convertValue(
+                        response.data.get("execStatistics"),
+                        mapper.getTypeFactory().constructCollectionType(List.class, Map.class)
+                );
                 ObservableList<StatisticUserRow> rows = FXCollections.observableArrayList();
 
-                for (Map.Entry<String, Object> entry : statsMap.entrySet()) {
-                    rows.add(new StatisticUserRow(entry.getKey(), String.valueOf(entry.getValue())));
+                for (Map<String, Object> u : statsMap) {
+                    rows.add(new StatisticUserRow(
+                            (Integer) u.get("number"),
+                            (String) u.get("type"),
+                            (String) u.get("name"),
+                            (String) u.get("arch"),
+                            (Integer) u.get("degree"),
+                            (Integer) u.get("result"),
+                            (Integer) u.get("cycles")
+                    ));
                 }
 
                 statisticTable.setItems(rows);

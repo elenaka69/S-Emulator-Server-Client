@@ -184,13 +184,13 @@ public class ServerMain {
         if (!validateParameter(username)) {
             return new BaseResponse(false, "Invalid username");
         }
+        List<Map<String, Object>> statistics = new ArrayList<>();
 
-        Map<String, Object> statistics = new LinkedHashMap<>();
         int result = EngineManager.getInstance().fetchUserStatistic(username, statistics);
 
         return switch (result) {
             case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not logged in");
-            case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Statistics collected").add("statistics", statistics);
+            case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Statistics collected").add("execStatistics", statistics);
             default -> new BaseResponse(false, "Failed to fetch statistics");
         };
     }

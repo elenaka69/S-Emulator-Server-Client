@@ -8,7 +8,10 @@ import server.engine.variable.VariableImpl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -23,9 +26,10 @@ public class UserProfile {
     private final AtomicInteger spentCredit = new AtomicInteger(0);
     private final AtomicInteger numberPrograms = new AtomicInteger(0);
     private final AtomicInteger numberFunctions = new AtomicInteger(0);
-    private final AtomicInteger numberExecutions = new AtomicInteger(0);
-    private final AtomicLong lastActive = new AtomicLong(System.currentTimeMillis());
+     private final AtomicLong lastActive = new AtomicLong(System.currentTimeMillis());
     private final AtomicBoolean isActive = new AtomicBoolean(true);
+
+    private final List<ExecStatistic> executions = new CopyOnWriteArrayList<>();
 
     private volatile SprogramImpl chosenMainProgram = null;
     private volatile FunctionExecutor workingFunction = null;
@@ -63,12 +67,16 @@ public class UserProfile {
 
     public int getNumberPrograms() { return numberPrograms.get(); }
     public int getNumberFunctions() { return numberFunctions.get(); }
-    public int getNumberExecutions() { return numberExecutions.get(); }
+    public int getNumberExecutions() { return executions.size(); }
     public void incrementPrograms() { numberPrograms.incrementAndGet(); }
     public void incrementFunctions(int nFunc) {
         if (nFunc > 0) numberFunctions.addAndGet(nFunc);
     }
-    public void incrementExecutions() { numberExecutions.incrementAndGet(); }
+
+    public void addExecutionStat(String type, String name, String arch, int degree, int result, int cycles) {
+        executions.add(new ExecStatistic(type, name, arch, degree, result, cycles));
+    }
+    public List<ExecStatistic> getExecutionStats() { return executions; }
 
     public synchronized void setMainProgram(SprogramImpl program, String programName) {
         this.chosenMainProgram = program;
@@ -137,3 +145,4 @@ public class UserProfile {
         return ERROR_CODES.ERROR_FUNCTION_NOT_FOUND;
     }
 }
+

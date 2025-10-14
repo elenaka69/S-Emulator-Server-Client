@@ -1,5 +1,6 @@
 package server.engine.execution;
 
+import server.auth.ExecStatistic;
 import server.auth.UserManager;
 import server.auth.UserProfile;
 import server.engine.impl.api.skeleton.AbstractOpBasic;
@@ -204,17 +205,24 @@ public class EngineManager {
         return ERROR_CODES.ERROR_OK;
     }
 
-    public int fetchUserStatistic(String username, Map<String, Object> statistics) {
+    public int fetchUserStatistic(String username, List<Map<String, Object>> statistics) {
         UserProfile profile = UserManager.getActiveUsers().get(username);
         if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
 
         synchronized (profile) {
-            statistics.put("UserName", username);
-            statistics.put("Number of Uploaded Programs", String.valueOf(profile.getNumberPrograms()));
-            statistics.put("Number of Uploaded Functions", String.valueOf(profile.getNumberFunctions()));
-            statistics.put("Current Credit Balance", String.valueOf(profile.getCredit()));
-            statistics.put("Total Spent Credits", String.valueOf(profile.getTotalSpentCredits()));
-            statistics.put("Total number of Executions", String.valueOf(profile.getNumberExecutions()));
+            int num = 1;
+            List<ExecStatistic> stat = profile.getExecutionStats();
+            for (ExecStatistic s : stat) {
+                Map<String, Object> row = new HashMap<>();
+                row.put("number", num++);
+                row.put("type", s.getType());
+                row.put("name", s.getName());
+                row.put("arch", s.getArch());
+                row.put("degree", s.getDegree());
+                row.put("result", s.getResult());
+                row.put("cycles", s.getCycles());
+                statistics.add(row);
+            }
         }
         return ERROR_CODES.ERROR_OK;
     }
