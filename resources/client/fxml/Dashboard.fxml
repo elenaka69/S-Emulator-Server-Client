@@ -127,8 +127,12 @@
                                            prefWidth="400">
                                     <columns>
                                         <TableColumn text="#" prefWidth="30" fx:id="colFuncNumber"/>
-                                        <TableColumn text="Function" prefWidth="240" fx:id="colFunction"/>
-                                        <TableColumn text="Cost" prefWidth="130" fx:id="colFuncCost"/>
+                                        <TableColumn text="Name" prefWidth="85" fx:id="colFuncamName"/>
+                                        <TableColumn text="User" prefWidth="80" fx:id="colPFuncUserName"/>
+                                        <TableColumn text="#Inst" prefWidth="50" fx:id="colFuncNumInstr"/>
+                                        <TableColumn text="Max&#10;Cost" prefWidth="50" fx:id="colFuncMaxCost"/>
+                                        <TableColumn text="#Exec" prefWidth="50" fx:id="colFuncNumExec"/>
+                                        <TableColumn text="Aver&#10;Cost" prefWidth="50" fx:id="colFuncAverCost"/>
                                     </columns>
                                 </TableView>
                             </VBox>

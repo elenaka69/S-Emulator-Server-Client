@@ -69,10 +69,14 @@ public class DashboardController {
     @FXML private TableColumn<ProgramsRow, Integer> colProgramNumExec;
     @FXML private TableColumn<ProgramsRow, Integer> colProgramAverCost;
 
-    public TableView<FunctionRow> functionsTable;
-    public TableColumn<FunctionRow, Integer> colFuncNumber;
-    public TableColumn<FunctionRow, String> colFunction;
-    public TableColumn<FunctionRow, Integer> colFuncCost;
+    public TableView<FunctionsRow> functionsTable;
+    @FXML private TableColumn<FunctionsRow, Integer> colFuncNumber;
+    @FXML private TableColumn<FunctionsRow, String> colFuncamName;
+    @FXML private TableColumn<FunctionsRow, String> colPFuncUserName;
+    @FXML private TableColumn<FunctionsRow, Integer> colFuncNumInstr;
+    @FXML private TableColumn<FunctionsRow, Integer> colFuncMaxCost;
+    @FXML private TableColumn<FunctionsRow, Integer> colFuncNumExec;
+    @FXML private TableColumn<FunctionsRow, Integer> colFuncAverCost;
 
     private String clientUsername;
     private String selectedUser;
@@ -395,19 +399,33 @@ public class DashboardController {
         public int getAverCost() { return averCost; }
     }
 
-    public static class FunctionRow {
-        private final Integer number;
-        private final String funcName;
-        private final Integer cost;
+    public class FunctionsRow {
+        private final int number;
+        private final String name;
+        private final String userName;
+        private final int numInstructions;
+        private final int maxCost;
+        private final int numExec;
+        private final int averCost;
 
-        public FunctionRow(int number, String funcName, Integer cost) {
+        public FunctionsRow(int number, String name, String userName,
+                            int numInstructions, int maxCost, int numExec, int averCost) {
             this.number = number;
-            this.funcName = funcName;
-            this.cost = cost;
+            this.name = name;
+            this.userName = userName;
+            this.numInstructions = numInstructions;
+            this.maxCost = maxCost;
+            this.numExec = numExec;
+            this.averCost = averCost;
         }
-        public Integer getNumber() { return number; }
-        public String getFunctionName() { return funcName; }
-        public Integer getCost() { return cost; }
+
+        public int getNumber() { return number; }
+        public String getName() { return name; }
+        public String getUserName() { return userName; }
+        public int getNumInstructions() { return numInstructions; }
+        public int getMaxCost() { return maxCost; }
+        public int getNumExec() { return numExec; }
+        public int getAverCost() { return averCost; }
     }
 
     private void setupTables() {
@@ -436,8 +454,12 @@ public class DashboardController {
         colProgramAverCost.setCellValueFactory(new PropertyValueFactory<>("averCost"));
 
         colFuncNumber.setCellValueFactory(new PropertyValueFactory<>("number"));
-        colFunction.setCellValueFactory(new PropertyValueFactory<>("functionName"));
-        colFuncCost.setCellValueFactory(new PropertyValueFactory<>("cost"));
+        colFuncamName.setCellValueFactory(new PropertyValueFactory<>("name"));
+        colPFuncUserName.setCellValueFactory(new PropertyValueFactory<>("userName"));
+        colFuncNumInstr.setCellValueFactory(new PropertyValueFactory<>("numInstructions"));
+        colFuncMaxCost.setCellValueFactory(new PropertyValueFactory<>("maxCost"));
+        colFuncNumExec.setCellValueFactory(new PropertyValueFactory<>("numExec"));
+        colFuncAverCost.setCellValueFactory(new PropertyValueFactory<>("averCost"));
     }
 
     private void startScheduler() {
@@ -622,6 +644,7 @@ public class DashboardController {
             });
         });
     }
+
     private void loadFunctionsTable() {
         BaseRequest req = new BaseRequest("getFunctions");
 
@@ -636,15 +659,18 @@ public class DashboardController {
                         response.data.get("functions"),
                         mapper.getTypeFactory().constructCollectionType(List.class, Map.class)
                 );
-                ObservableList<FunctionRow> rows = FXCollections.observableArrayList();
+                ObservableList<FunctionsRow> rows = FXCollections.observableArrayList();
                 for (Map<String, Object> f : functions) {
-                    rows.add(new FunctionRow(
+                    rows.add(new FunctionsRow(
                             (Integer) f.get("number"),
-                            (String) f.get("functionName"),
-                            (Integer) f.get("cost")
+                            (String) f.get("name"),
+                            (String) f.get("userName"),
+                            (Integer) f.get("numInstructions"),
+                            (Integer) f.get("maxCost"),
+                            (Integer) f.get("numExec"),
+                            (Integer) f.get("averCost")
                     ));
                 }
-
                 functionsTable.setItems(rows);
                 loadConnectedUsers();
             });

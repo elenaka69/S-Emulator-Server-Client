@@ -81,7 +81,7 @@ public class Factory
             throw e;
         }
         try {
-            res = extractFunctions();
+            res = extractFunctions(username);
             if (res != ERROR_CODES.ERROR_OK) {
                 removeFunctions();
                 return res;
@@ -176,7 +176,7 @@ public class Factory
         }
     }
 
-    private int extractFunctions()
+    private int extractFunctions( String userName)
     {
         if (xFunctions == null)
             return ERROR_CODES.ERROR_OK;
@@ -188,26 +188,31 @@ public class Factory
             if (sFunc == null) {
                 sFunc = new FunctionExecutorImpl(name);
                 sFunc.setUserString(xFunc.getUserString());
-                ProgramCollection.registerFunction(name, sFunc);
+                ProgramCollection.registerFunction(userName, name, sFunc);
                 functionNamesOfProgram.add(name);
             }
             functions.add(name);
         });
 
         for (XFunction xFunc : xFunctions) {
-            List<XOp> sInstructions = xFunc.getInstructions();
-            if (sInstructions == null || sInstructions.isEmpty()) {
-                throw new IllegalArgumentException("Invalid function: " + xFunc.getName() + " no instructions defined.");
+            String name = xFunc.getName();
+
+            if (ProgramCollection.isToUpdateFunction(name)) {
+                List<XOp> sInstructions = xFunc.getInstructions();
+                if (sInstructions == null || sInstructions.isEmpty()) {
+                    throw new IllegalArgumentException("Invalid function: " + xFunc.getName() + " no instructions defined.");
+                }
+                instructionCollect collection = new instructionCollect(sInstructions);
+                collection.extractLabels();
+
+                FunctionExecutor func = ProgramCollection.getFunction(xFunc.getName());
+
+                validateLabels(collection.getInstructions(), collection.getDefinedLabels());
+                res = buildProgram(func, collection.getInstructions(), collection.getDefinedLabels());
+                if (res != ERROR_CODES.ERROR_OK)
+                    break; // stop loop on first error
+                ProgramCollection.updateFunctionStatistics(name);
             }
-            instructionCollect collection = new instructionCollect(sInstructions);
-            collection.extractLabels();
-
-            FunctionExecutor func = ProgramCollection.getFunction(xFunc.getName());
-
-            validateLabels(collection.getInstructions(), collection.getDefinedLabels());
-            res = buildProgram(func, collection.getInstructions(), collection.getDefinedLabels());
-            if (res != ERROR_CODES.ERROR_OK)
-                break; // stop loop on first error
         };
         return res;
     }

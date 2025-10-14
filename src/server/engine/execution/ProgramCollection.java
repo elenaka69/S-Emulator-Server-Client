@@ -12,18 +12,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class ProgramCollection {
 
     private static final Map<String, ProgramProperty> programs = new ConcurrentHashMap<>();
+    private static final Map<String, ProgramProperty> functions = new ConcurrentHashMap<>();
 
-    private static final Map<String, FunctionExecutorImpl> functions = new ConcurrentHashMap<>();
-    private static final List<String> listPrograms = new CopyOnWriteArrayList<>();
-    private static final List<String> listFunctions = new CopyOnWriteArrayList<>();
 
     public static void registerProgram(String userName, String fileName, FunctionExecutor program) {
-        // putIfAbsent returns the previous value, null if none
-        ProgramProperty prop = new ProgramProperty(program, fileName, userName);
 
-        if (programs.putIfAbsent(fileName, prop) == null) {
-            listPrograms.add(fileName); // only add if it was absent
-        }
+        ProgramProperty prop = new ProgramProperty(program, fileName, userName, false);
+        programs.putIfAbsent(fileName, prop);
     }
 
     public static SprogramImpl getProgram(String fileName) {
@@ -41,34 +36,42 @@ public class ProgramCollection {
         return programs.containsKey(fileName);
     }
 
-    public static List<String> getListPrograms() {
-        return listPrograms;
+
+    public static void registerFunction(String userName, String functionName, FunctionExecutor function) {
+        ProgramProperty prop = new ProgramProperty(function, functionName, userName, true);
+        functions.putIfAbsent(functionName, prop);
     }
 
-
-
-
-    public static void registerFunction(String functionName, FunctionExecutorImpl function) {
-        if (functions.putIfAbsent(functionName, function) == null) {
-            listFunctions.add(functionName);
+    public static void updateFunctionStatistics(String functionName) {
+        ProgramProperty prop = functions.get(functionName);
+        if (prop != null ) {
+            prop.updateStatistics();
         }
+    }
+    public static boolean isToUpdateFunction(String functionName) {
+        ProgramProperty prop = functions.get(functionName);
+        return prop.isToUpdate();
     }
 
     public static void removeFunction(String functionName) {
-        if (functions.remove(functionName) != null) {
-            listFunctions.remove(functionName);
-        }
+        functions.remove(functionName);
     }
 
     public static FunctionExecutorImpl getFunction(String functionName) {
-        return functions.get(functionName);
+        ProgramProperty prop = functions.get(functionName);
+        if (prop != null)
+            return (FunctionExecutorImpl)(prop.getExecutor());
+        return null;
     }
 
     public static boolean isFunctionExists(String functionName) {
         return functions.containsKey(functionName);
     }
 
-    public static List<String> getListFunctions() {
-        return listFunctions;
+    public static int getNumFunctions() {
+        return functions.size();
+    }
+    public static Map<String, ProgramProperty> getFunctions() {
+        return functions;
     }
 }

@@ -51,9 +51,9 @@ public class EngineManager {
             byte[] fileBytes = Base64.getDecoder().decode(base64Data);
             try (InputStream xmlStream = new ByteArrayInputStream(fileBytes)) {
 
-                int nFunctionsBefore = ProgramCollection.getListFunctions().size();
+                int nFunctionsBefore = ProgramCollection.getNumFunctions();
                 int res = factory.loadProgramFromXml(username, fileName, xmlStream);
-                int nFunctionsAfter = ProgramCollection.getListFunctions().size();
+                int nFunctionsAfter = ProgramCollection.getNumFunctions();
 
                 if (nFunctionsAfter > nFunctionsBefore) {
                     UserManager.incrementFunctions(username, nFunctionsAfter - nFunctionsBefore);
@@ -64,9 +64,10 @@ public class EngineManager {
                     return ERROR_CODES.ERROR_OK;
                 } else if (res == ERROR_CODES.ERROR_FUNCTION_MISSING) {
                     return ERROR_CODES.ERROR_FUNCTION_MISSING;
-                } else {
+                } else if (res == ERROR_CODES.ERROR_PROGRAM_WO_INSTRUCTIONS)
+                    return ERROR_CODES.ERROR_OK;
+                else
                     return ERROR_CODES.ERROR_INVALID_FILE;
-                }
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -248,14 +249,18 @@ public class EngineManager {
     }
 
     public int fetchFunctions(List<Map<String, Object>> functionsList) {
-        List<String> functions = ProgramCollection.getListFunctions();
+        Map<String, ProgramProperty> functions = ProgramCollection.getFunctions();
         int num = 1;
-        for (String functionName : functions) {
-            FunctionExecutorImpl func = ProgramCollection.getFunction(functionName);
+        for (Map.Entry<String, ProgramProperty> entry : functions.entrySet()) {
+            ProgramProperty prop = entry.getValue();
             Map<String, Object> row = new HashMap<>();
             row.put("number", num++);
-            row.put("functionName", functionName);
-            row.put("cost", func.getCost());
+            row.put("name", entry.getKey());
+            row.put("userName", prop.getUsername());
+            row.put("numInstructions", prop.getNumInstructions());
+            row.put("maxCost", prop.getMaxCost());
+            row.put("numExec", prop.getNumExecs());
+            row.put("averCost", prop.getAverageCost());
             functionsList.add(row);
         }
         return ERROR_CODES.ERROR_OK;
