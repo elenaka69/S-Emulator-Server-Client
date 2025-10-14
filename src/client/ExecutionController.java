@@ -16,13 +16,12 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.util.Pair;
-import server.engine.variable.VariableImpl;
 import shared.BaseRequest;
 import shared.BaseResponse;
 import shared.ExecutionStep;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
@@ -76,6 +75,7 @@ public class ExecutionController {
     private String clientUsername;
     private String programName;
     private int currentHighlightedStep = -1;
+    private int currentStepIndex = 0;
     private String highlightText = null;
     private int maxDegree;
     private int runHistoryCounter = 0;
@@ -305,15 +305,58 @@ public class ExecutionController {
     }
 
     public void onStepOver(ActionEvent actionEvent) {
+        stepOverRoutine();
     }
 
     public void onStopDebug(ActionEvent actionEvent) {
     }
 
     public void onDebug(ActionEvent actionEvent) {
+        if (runRoutine()) {
+            currentHighlightedStep = -1;
+            currentStepIndex = 0;
+            instructionTable.refresh();
+            instructionTable.scrollTo(0);
+            stepOverRoutine();
+        }
     }
 
     public void onRun(ActionEvent actionEvent) {
+        if (runRoutine()) {
+            populateDebugTable(runListMap.size() - 1);
+            setStatistics();
+        }
+    }
+
+    private void stepOverRoutine() {
+        if(runListMap == null)
+            return;
+
+        if(currentStepIndex >= runListMap.size()){
+            setStatistics();
+            showStatus("Debug finished.", Alert.AlertType.INFORMATION);
+            return;
+        }
+
+        currentHighlightedStep = populateDebugTable(currentStepIndex);
+        currentStepIndex++;
+        Platform.runLater(() -> {
+            instructionTable.scrollTo(currentHighlightedStep);
+            instructionTable.refresh();
+        });
+
+        if(currentStepIndex >= runListMap.size())
+        {
+            setStatistics();
+            showStatus("Debug finished.", Alert.AlertType.INFORMATION);
+            return;
+        }
+    }
+
+    private boolean runRoutine()
+    {
+        AtomicBoolean result = new AtomicBoolean(false);
+
         if (checkAndConfirmParams()) {
             List<Long> userVars = getUserVars();
             BaseRequest req = new BaseRequest("runProgram")
@@ -329,10 +372,9 @@ public class ExecutionController {
                     Platform.runLater(() -> {
                         if (runListMap == null || runListMap.isEmpty()) {
                             showStatus("No execution data", Alert.AlertType.WARNING);
-                            return;
-                        }
-                        populateDebugTable(runListMap.size() - 1);
-                        setStatistics();
+                        } else
+                            result.set(true);
+
                         showStatus(response.message, Alert.AlertType.INFORMATION);
                     });
                 } else {
@@ -340,6 +382,7 @@ public class ExecutionController {
                 }
             });
         }
+        return result.get();
     }
 
     private void updateProgramStatisticTable(long result, int cycles)
