@@ -185,7 +185,7 @@ public class EngineManager {
     }
 
     public int fetchUsers(List<Map<String, Object>> usersList) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
         int num = 1;
         for (Map.Entry<String, UserProfile> entry : UserManager.getActiveUsers().entrySet()) {
             UserProfile profile = entry.getValue();
@@ -193,9 +193,14 @@ public class EngineManager {
             Map<String, Object> row = new HashMap<>();
             row.put("number", num++);
             row.put("userName", entry.getKey());
-            row.put("loginTime", profile.getLoginTime().format(formatter));
+            row.put("uploadedPrograms", profile.getNumberPrograms());
+            row.put("uploadedFunctions", profile.getNumberFunctions());
+            row.put("creditBalance", profile.getCredit());
+            row.put("spentCredits", profile.getTotalSpentCredits());
+            row.put("executions", profile.getNumberExecutions());
             usersList.add(row);
         }
+
         return ERROR_CODES.ERROR_OK;
     }
 

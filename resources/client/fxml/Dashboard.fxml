@@ -57,7 +57,7 @@
                     <!-- Users / Programs modules side-by-side -->
                 <HBox spacing="10" alignment="TOP_LEFT" style="-fx-padding: 0 0 0 20;">
                 <!-- Users Module -->
-                    <TitledPane text="Users" collapsible="false" prefWidth="400" >
+                    <TitledPane text="Users" collapsible="false" prefWidth="500" >
                         <VBox spacing="10" alignment="TOP_CENTER" fillWidth="true" style="-fx-padding: 10;">
 
                             <!-- Connected Users Table -->
@@ -68,8 +68,12 @@
                                            prefWidth="400">
                                     <columns>
                                         <TableColumn text="#" prefWidth="30" fx:id="colNumber"/>
-                                        <TableColumn text="Username" prefWidth="170" fx:id="colUsername"/>
-                                        <TableColumn text="Login Time" prefWidth="170" fx:id="colLoginTime"/>
+                                        <TableColumn text="Username" prefWidth="120" fx:id="colUsername"/>
+                                        <TableColumn text="#Prog" prefWidth="50" fx:id="colUpProg"/>
+                                        <TableColumn text="#Funcs" prefWidth="50" fx:id="colUpFuncs"/>
+                                        <TableColumn text="Credits" prefWidth="50" fx:id="colBalance"/>
+                                        <TableColumn text="Spent" prefWidth="50" fx:id="colSpentCredits"/>
+                                        <TableColumn text="Exec" prefWidth="50" fx:id="colNumExecutions"/>
                                     </columns>
                                 </TableView>
                             </VBox>

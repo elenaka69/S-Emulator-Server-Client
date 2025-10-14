@@ -46,7 +46,11 @@ public class DashboardController {
     @FXML public TableView<ConnectedUsersRow> connectedUsersTable;
     @FXML public TableColumn<ConnectedUsersRow, Integer> colNumber;
     @FXML public TableColumn<ConnectedUsersRow, String> colUsername;
-    @FXML public TableColumn<ConnectedUsersRow, String> colLoginTime;
+    @FXML public TableColumn<ConnectedUsersRow, Integer> colUpProg;
+    @FXML public TableColumn<ConnectedUsersRow, Integer> colUpFuncs;
+    @FXML public TableColumn<ConnectedUsersRow, Integer> colBalance;
+    @FXML public TableColumn<ConnectedUsersRow, Integer> colSpentCredits;
+    @FXML public TableColumn<ConnectedUsersRow, Integer> colNumExecutions;
     @FXML public TableView<StatisticUserRow>  statisticTable;
     @FXML public TableColumn<StatisticUserRow, String> colProperty;
     @FXML public TableColumn<StatisticUserRow, String> colValue;
@@ -219,6 +223,7 @@ public class DashboardController {
                         creditsField.setText(response.data.get("newBalance").toString());
                         chargeAmountField.clear();
                         if (selectedUser.equals(clientUsername)) {
+                            loadConnectedUsers();
                             loadUserStatistics();
                         }
                     }
@@ -295,16 +300,30 @@ public class DashboardController {
     public static class ConnectedUsersRow {
         private final Integer number;
         private final String userName;
-        private final String loginTime;
+        private final Integer uploadedPrograms;
+        private final Integer uploadedFunctions;
+        private final Integer creditBalance;
+        private final Integer spentCredits;
+        private final Integer executions;
 
-        public ConnectedUsersRow(int number, String userName, String loginTime) {
+        public ConnectedUsersRow(int number, String userName, Integer uploadedPrograms,
+                                 Integer uploadedFunctions, Integer creditBalance, Integer spentCredits, Integer executions) {
             this.number = number;
             this.userName = userName;
-            this.loginTime = loginTime;
+            this.uploadedPrograms = uploadedPrograms;
+            this.uploadedFunctions = uploadedFunctions;
+            this.creditBalance = creditBalance;
+            this.spentCredits = spentCredits;
+            this.executions = executions;
         }
+
         public String getUserName() { return userName; }
         public Integer getNumber() { return number; }
-        public String getLoginTime() { return loginTime; }
+        public Integer getUploadedPrograms() { return uploadedPrograms; }
+        public Integer getUploadedFunctions() { return uploadedFunctions; }
+        public Integer getExecutions() { return executions; }
+        public Integer getCreditBalance() { return creditBalance; }
+        public Integer getSpentCredits() { return spentCredits; }
     }
 
     public static class StatisticUserRow {
@@ -353,7 +372,11 @@ public class DashboardController {
     private void setupTables() {
         colNumber.setCellValueFactory(new PropertyValueFactory<>("number"));
         colUsername.setCellValueFactory(new PropertyValueFactory<>("userName"));
-        colLoginTime.setCellValueFactory(new PropertyValueFactory<>("loginTime"));
+        colUpProg.setCellValueFactory(new PropertyValueFactory<>("uploadedPrograms"));
+        colUpFuncs.setCellValueFactory(new PropertyValueFactory<>("uploadedFunctions"));
+        colBalance.setCellValueFactory(new PropertyValueFactory<>("creditBalance"));
+        colSpentCredits.setCellValueFactory(new PropertyValueFactory<>("spentCredits"));
+        colNumExecutions.setCellValueFactory(new PropertyValueFactory<>("executions"));
 
         colProperty.setCellValueFactory(new PropertyValueFactory<>("property"));
         colValue.setCellValueFactory(new PropertyValueFactory<>("value"));
@@ -468,7 +491,11 @@ public class DashboardController {
                         rows.add(new ConnectedUsersRow(
                                 (Integer) u.get("number"),
                                 (String) u.get("userName"),
-                                (String) u.get("loginTime")
+                                (Integer) u.get("uploadedPrograms"),
+                                (Integer) u.get("uploadedFunctions"),
+                                (Integer) u.get("creditBalance"),
+                                (Integer) u.get("spentCredits"),
+                                (Integer) u.get("executions")
                         ));
                     }
 
