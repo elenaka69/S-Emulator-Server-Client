@@ -81,7 +81,7 @@ public class Factory
             throw e;
         }
         try {
-            res = extractFunctions(username);
+            res = extractFunctions(username, fileName);
             if (res != ERROR_CODES.ERROR_OK) {
                 removeFunctions();
                 return res;
@@ -176,7 +176,7 @@ public class Factory
         }
     }
 
-    private int extractFunctions( String userName)
+    private int extractFunctions( String userName, String programName) throws IllegalArgumentException
     {
         if (xFunctions == null)
             return ERROR_CODES.ERROR_OK;
@@ -188,7 +188,7 @@ public class Factory
             if (sFunc == null) {
                 sFunc = new FunctionExecutorImpl(name);
                 sFunc.setUserString(xFunc.getUserString());
-                ProgramCollection.registerFunction(userName, name, sFunc);
+                ProgramCollection.registerFunction(userName, name, programName, sFunc);
                 functionNamesOfProgram.add(name);
             }
             functions.add(name);

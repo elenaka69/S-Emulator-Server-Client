@@ -12,12 +12,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class ProgramCollection {
 
     private static final Map<String, ProgramProperty> programs = new ConcurrentHashMap<>();
-    private static final Map<String, ProgramProperty> functions = new ConcurrentHashMap<>();
+    private static final Map<String, FunctionProperty> functions = new ConcurrentHashMap<>();
 
 
     public static void registerProgram(String userName, String fileName, FunctionExecutor program) {
 
-        ProgramProperty prop = new ProgramProperty(program, fileName, userName, false);
+        ProgramProperty prop = new ProgramProperty(program, fileName, userName);
         programs.putIfAbsent(fileName, prop);
     }
 
@@ -37,20 +37,20 @@ public class ProgramCollection {
     }
 
 
-    public static void registerFunction(String userName, String functionName, FunctionExecutor function) {
-        ProgramProperty prop = new ProgramProperty(function, functionName, userName, true);
+    public static void registerFunction(String userName, String functionName, String programName, FunctionExecutor function) {
+        FunctionProperty prop = new FunctionProperty(function, functionName, userName, programName);
         functions.putIfAbsent(functionName, prop);
     }
 
     public static void updateFunctionStatistics(String functionName) {
-        ProgramProperty prop = functions.get(functionName);
+        FunctionProperty prop = functions.get(functionName);
         if (prop != null ) {
             prop.updateStatistics();
         }
     }
     public static boolean isToUpdateFunction(String functionName) {
-        ProgramProperty prop = functions.get(functionName);
-        return prop.isToUpdate();
+        FunctionProperty prop = functions.get(functionName);
+        return prop.getToUpdate();
     }
 
     public static void removeFunction(String functionName) {
@@ -58,7 +58,7 @@ public class ProgramCollection {
     }
 
     public static FunctionExecutorImpl getFunction(String functionName) {
-        ProgramProperty prop = functions.get(functionName);
+        FunctionProperty prop = functions.get(functionName);
         if (prop != null)
             return (FunctionExecutorImpl)(prop.getExecutor());
         return null;
@@ -71,7 +71,7 @@ public class ProgramCollection {
     public static int getNumFunctions() {
         return functions.size();
     }
-    public static Map<String, ProgramProperty> getFunctions() {
+    public static Map<String, FunctionProperty> getFunctions() {
         return functions;
     }
 }

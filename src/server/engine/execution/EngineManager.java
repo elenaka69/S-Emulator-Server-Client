@@ -249,18 +249,17 @@ public class EngineManager {
     }
 
     public int fetchFunctions(List<Map<String, Object>> functionsList) {
-        Map<String, ProgramProperty> functions = ProgramCollection.getFunctions();
+        Map<String, FunctionProperty> functions = ProgramCollection.getFunctions();
         int num = 1;
-        for (Map.Entry<String, ProgramProperty> entry : functions.entrySet()) {
-            ProgramProperty prop = entry.getValue();
+        for (Map.Entry<String, FunctionProperty> entry : functions.entrySet()) {
+            FunctionProperty prop = entry.getValue();
             Map<String, Object> row = new HashMap<>();
             row.put("number", num++);
             row.put("name", entry.getKey());
+            row.put("programName", prop.getProgramName());
             row.put("userName", prop.getUsername());
             row.put("numInstructions", prop.getNumInstructions());
             row.put("maxCost", prop.getMaxCost());
-            row.put("numExec", prop.getNumExecs());
-            row.put("averCost", prop.getAverageCost());
             functionsList.add(row);
         }
         return ERROR_CODES.ERROR_OK;

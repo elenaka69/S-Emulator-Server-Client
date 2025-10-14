@@ -72,11 +72,10 @@ public class DashboardController {
     public TableView<FunctionsRow> functionsTable;
     @FXML private TableColumn<FunctionsRow, Integer> colFuncNumber;
     @FXML private TableColumn<FunctionsRow, String> colFuncamName;
+    @FXML private TableColumn<FunctionsRow, String> colFuncamProgram;
     @FXML private TableColumn<FunctionsRow, String> colPFuncUserName;
     @FXML private TableColumn<FunctionsRow, Integer> colFuncNumInstr;
     @FXML private TableColumn<FunctionsRow, Integer> colFuncMaxCost;
-    @FXML private TableColumn<FunctionsRow, Integer> colFuncNumExec;
-    @FXML private TableColumn<FunctionsRow, Integer> colFuncAverCost;
 
     private String clientUsername;
     private String selectedUser;
@@ -402,30 +401,27 @@ public class DashboardController {
     public class FunctionsRow {
         private final int number;
         private final String name;
+        private final String programName;
         private final String userName;
         private final int numInstructions;
         private final int maxCost;
-        private final int numExec;
-        private final int averCost;
 
-        public FunctionsRow(int number, String name, String userName,
-                            int numInstructions, int maxCost, int numExec, int averCost) {
+        public FunctionsRow(int number, String name, String programName, String userName,
+                            int numInstructions, int maxCost) {
             this.number = number;
             this.name = name;
+            this.programName = programName;
             this.userName = userName;
             this.numInstructions = numInstructions;
             this.maxCost = maxCost;
-            this.numExec = numExec;
-            this.averCost = averCost;
         }
 
         public int getNumber() { return number; }
         public String getName() { return name; }
+        public String getProgramName() { return programName; }
         public String getUserName() { return userName; }
         public int getNumInstructions() { return numInstructions; }
         public int getMaxCost() { return maxCost; }
-        public int getNumExec() { return numExec; }
-        public int getAverCost() { return averCost; }
     }
 
     private void setupTables() {
@@ -455,11 +451,10 @@ public class DashboardController {
 
         colFuncNumber.setCellValueFactory(new PropertyValueFactory<>("number"));
         colFuncamName.setCellValueFactory(new PropertyValueFactory<>("name"));
+        colFuncamProgram.setCellValueFactory(new PropertyValueFactory<>("programName"));
         colPFuncUserName.setCellValueFactory(new PropertyValueFactory<>("userName"));
         colFuncNumInstr.setCellValueFactory(new PropertyValueFactory<>("numInstructions"));
         colFuncMaxCost.setCellValueFactory(new PropertyValueFactory<>("maxCost"));
-        colFuncNumExec.setCellValueFactory(new PropertyValueFactory<>("numExec"));
-        colFuncAverCost.setCellValueFactory(new PropertyValueFactory<>("averCost"));
     }
 
     private void startScheduler() {
@@ -664,11 +659,10 @@ public class DashboardController {
                     rows.add(new FunctionsRow(
                             (Integer) f.get("number"),
                             (String) f.get("name"),
+                            (String) f.get("programName"),
                             (String) f.get("userName"),
                             (Integer) f.get("numInstructions"),
-                            (Integer) f.get("maxCost"),
-                            (Integer) f.get("numExec"),
-                            (Integer) f.get("averCost")
+                            (Integer) f.get("maxCost")
                     ));
                 }
                 functionsTable.setItems(rows);
