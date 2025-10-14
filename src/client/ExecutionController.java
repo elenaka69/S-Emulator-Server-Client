@@ -16,6 +16,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import shared.BaseRequest;
 import shared.BaseResponse;
 import shared.ExecutionStep;
@@ -42,6 +43,12 @@ public class ExecutionController {
     @FXML private TextField expandField;
     @FXML private Button expandButton;
     @FXML private Button collapseButton;
+    @FXML private Button runButton;
+    @FXML private Button debugButton;
+    @FXML private Button stepOverButton;
+    @FXML private Button stepBackButton;
+    @FXML private Button stopButton;
+    @FXML private Button resumeButton;
     @FXML private ComboBox<String> highlightComboBox;
     @FXML private ComboBox<String> funcsComboBox;
     @FXML private TableView<InstructionRow> instructionTable;
@@ -86,6 +93,7 @@ public class ExecutionController {
         setupHistoryTable();
         setupWatchDebugTable();
         setupProgramHistory();
+        setupToolTips();
         historyRunTable.setItems(historyRunData);
 
         instructionTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
@@ -299,9 +307,28 @@ public class ExecutionController {
     }
 
     public void onStepBackButton(ActionEvent actionEvent) {
+        if (currentStepIndex - 2 >= 0)
+        {
+            currentStepIndex -= 2;
+            stepOverRoutine();
+        }
     }
 
     public void onResumeDebug(ActionEvent actionEvent) {
+        if (runListMap == null) return;
+
+        while (currentStepIndex <= runListMap.size()) {
+            stepOverRoutine();
+
+            if (currentHighlightedStep == -1)
+                break;
+            // Optional: stop automatically if a breakpoint is reached
+            InstructionRow currentRow = instructionTable.getItems().get(currentHighlightedStep);
+            if (currentRow.getBreakpoint()) {
+                statusBar.setText("Paused at breakpoint: " + currentRow.getLabel());
+                break;
+            }
+        }
     }
 
     public void onStepOver(ActionEvent actionEvent) {
@@ -309,23 +336,31 @@ public class ExecutionController {
     }
 
     public void onStopDebug(ActionEvent actionEvent) {
+        currentHighlightedStep = -1;
+        currentStepIndex = 0;
+        instructionTable.scrollTo(0);
+        instructionTable.refresh();
     }
 
     public void onDebug(ActionEvent actionEvent) {
-        if (runRoutine()) {
-            currentHighlightedStep = -1;
-            currentStepIndex = 0;
-            instructionTable.refresh();
-            instructionTable.scrollTo(0);
-            stepOverRoutine();
-        }
+        runRoutine(success -> {
+            if (success) {
+                currentHighlightedStep = -1;
+                currentStepIndex = 0;
+                instructionTable.refresh();
+                instructionTable.scrollTo(0);
+                stepOverRoutine();
+            }
+        });
     }
 
     public void onRun(ActionEvent actionEvent) {
-        if (runRoutine()) {
-            populateDebugTable(runListMap.size() - 1);
-            setStatistics();
-        }
+        runRoutine(success -> {
+            if (success) {
+                populateDebugTable(runListMap.size() - 1);
+                setStatistics();
+            }
+        });
     }
 
     private void stepOverRoutine() {
@@ -353,36 +388,34 @@ public class ExecutionController {
         }
     }
 
-    private boolean runRoutine()
+    private void runRoutine(Consumer<Boolean> callback)
     {
-        AtomicBoolean result = new AtomicBoolean(false);
-
         if (checkAndConfirmParams()) {
             List<Long> userVars = getUserVars();
             BaseRequest req = new BaseRequest("runProgram")
                     .add("username", clientUsername)
                     .add("inputVariables", userVars);
+
             sendRequest("http://localhost:8080/api", req, response -> {
+                boolean success = false;
                 if (response.ok) {
                     runListMap = mapper.convertValue(
                             response.data.get("runListMap"),
                             new TypeReference<List<ExecutionStep>>() {}
                     );
 
-                    Platform.runLater(() -> {
-                        if (runListMap == null || runListMap.isEmpty()) {
-                            showStatus("No execution data", Alert.AlertType.WARNING);
-                        } else
-                            result.set(true);
-
-                        showStatus(response.message, Alert.AlertType.INFORMATION);
-                    });
-                } else {
-                    Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+                    if (runListMap != null && !runListMap.isEmpty()) success = true;
                 }
+
+                boolean finalSuccess = success;
+                Platform.runLater(() -> {
+                    showStatus(response.message, response.ok ? Alert.AlertType.INFORMATION : Alert.AlertType.WARNING);
+                    callback.accept(finalSuccess);
+                });
             });
+        } else {
+            callback.accept(false);
         }
-        return result.get();
     }
 
     private void updateProgramStatisticTable(long result, int cycles)
@@ -577,6 +610,33 @@ public class ExecutionController {
         colHistoryRunInput.setCellValueFactory(new PropertyValueFactory<>("input"));
         colHistoryRunResult.setCellValueFactory(new PropertyValueFactory<>("result"));
         colHistoryRunCycle.setCellValueFactory(new PropertyValueFactory<>("cycle"));
+    }
+
+    private void setupToolTips()
+    {
+        Tooltip stopTooltip = new Tooltip("Stop the current \n debugging session");
+        stopTooltip.setShowDelay(Duration.ZERO);
+        stopTooltip.setShowDuration(Duration.seconds(5));
+        stopTooltip.setHideDelay(Duration.ZERO);
+        stopButton.setTooltip(stopTooltip);
+
+        Tooltip resumeTooltip = new Tooltip("Resume");
+        resumeTooltip.setShowDelay(Duration.ZERO);
+        resumeTooltip.setShowDuration(Duration.seconds(5));
+        resumeTooltip.setHideDelay(Duration.ZERO);
+        resumeButton.setTooltip(resumeTooltip);
+
+        Tooltip stepOverTooltip = new Tooltip("Step over");
+        stepOverTooltip.setShowDelay(Duration.ZERO);
+        stepOverTooltip.setShowDuration(Duration.seconds(5));
+        stepOverTooltip.setHideDelay(Duration.ZERO);
+        stepOverButton.setTooltip(stepOverTooltip);
+
+        Tooltip stepBackTooltip = new Tooltip("Step backward");
+        stepBackTooltip.setShowDelay(Duration.ZERO);
+        stepBackTooltip.setShowDuration(Duration.seconds(5));
+        stepBackTooltip.setHideDelay(Duration.ZERO);
+        stepBackButton.setTooltip(stepBackTooltip);
     }
 
 
