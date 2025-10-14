@@ -77,6 +77,15 @@ public abstract class AbstractOpBasic  {
     public String getType() {
         return opData.getType().equals(OpType.BASIC)? "B" : "S";
     }
+    public String getArch() {
+        switch (opData.getArch()) {
+            case 1: return "I";
+            case 2: return "II";
+            case 3: return "III";
+            case 4: return "IV";
+            default: return "Unknown";
+        }
+    }
 
     public Label getLabel() {
         return label;

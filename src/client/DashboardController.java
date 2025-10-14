@@ -280,7 +280,7 @@ public class DashboardController {
 
             // Pass the username to dashboard controller
             ExecutionController controller = loader.getController();
-            controller.startExecutionBoard(clientUsername, selectedProgram);
+            controller.startExecutionBoard(clientUsername, selectedProgram, Integer.parseInt(creditsField.getText()));
 
             Stage stage = (Stage) usernameField.getScene().getWindow(); // reuse same stage
             stage.setScene(new Scene(root));

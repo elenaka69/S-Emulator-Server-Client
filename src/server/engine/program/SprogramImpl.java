@@ -29,6 +29,10 @@ public class SprogramImpl extends FunctionExecutorImpl {
         return funcNameList;
     }
 
+    public List<FunctionExecutor> getFunctions() {
+        return functions;
+    }
+
     public void updateFunctions() {
         if (functions == null)
             functions = new ArrayList<>();

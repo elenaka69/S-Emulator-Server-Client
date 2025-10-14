@@ -1,16 +1,16 @@
 package server.auth;
 
+import javafx.util.Pair;
 import server.engine.execution.ERROR_CODES;
+import server.engine.execution.ProgramExecutorImpl;
 import server.engine.label.Label;
 import server.engine.program.FunctionExecutor;
 import server.engine.program.SprogramImpl;
 import server.engine.variable.VariableImpl;
+import shared.ExecutionStep;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -123,6 +123,17 @@ public class UserProfile {
         return ERROR_CODES.ERROR_OK;
     }
 
+    public int getInputVariables(List<String> variables) {
+        if (workingFunction != null) {
+            for (int i = 0; i < workingFunction.getInputVarSize(); i++) {
+                String varName = workingFunction.getNextVar(i).getRepresentation();
+                variables.add(varName);
+            }
+            return ERROR_CODES.ERROR_OK;
+        }
+        return ERROR_CODES.ERROR_FUNCTION_NOT_FOUND;
+    }
+
     public int getDgreeProgram() {
         if (workingFunction != null)
             return workingFunction.getProgramDegree();
@@ -143,6 +154,21 @@ public class UserProfile {
             return ERROR_CODES.ERROR_OK;
         }
         return ERROR_CODES.ERROR_FUNCTION_NOT_FOUND;
+    }
+
+    public int executeProgram(List<Long> userVars, List<ExecutionStep> executionDetails) {
+
+        List<Pair<Integer, TreeMap<VariableImpl, Long>>> execResult =
+                ProgramExecutorImpl.run(workingFunction, userVars, chosenMainProgram.getFunctions());
+
+        for (Pair<Integer, TreeMap<VariableImpl, Long>> pair : execResult) {
+            Map<String, Long> varMap = new LinkedHashMap<>();
+            for (Map.Entry<VariableImpl, Long> entry : pair.getValue().entrySet()) {
+                varMap.put(entry.getKey().getRepresentation(), entry.getValue());  // assuming VariableImpl has getName()
+            }
+            executionDetails.add(new ExecutionStep(pair.getKey(), varMap));
+        }
+        return ERROR_CODES.ERROR_OK;
     }
 }
 

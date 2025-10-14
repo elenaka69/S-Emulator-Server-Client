@@ -6,7 +6,7 @@
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="client.ExecutionController"
-            prefWidth="900" prefHeight="800"
+            prefWidth="950" prefHeight="800"
             stylesheets="@/client/css/style.css"
             styleClass="root">
 
@@ -18,6 +18,11 @@
         <!-- Username (aligned left) -->
             <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 0 0 10;" fillHeight="true">
                 <Label fx:id="usernameField" text="" styleClass="section-label"/>
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <!-- Available Credits -->
+                <Label text="Available Credits:"/>
+                <TextField fx:id="creditsField" prefWidth="80" editable="false"/>
             </HBox>
         </VBox>
     </top>
@@ -54,15 +59,16 @@
                                     </HBox>
                                     <StackPane fx:id="viewStack" prefHeight="200" prefWidth="460">
                                         <!-- Table view -->
-                                        <TableView fx:id="instructionTable" prefHeight="200" prefWidth="460" VBox.vgrow="NEVER"
+                                        <TableView fx:id="instructionTable" prefHeight="200" prefWidth="500" VBox.vgrow="NEVER"
                                                    style="-fx-border-color: gray; -fx-border-width: 2; -fx-border-radius: 5;">
                                             <columns>
                                                 <TableColumn text="bp" prefWidth="30" fx:id="colBreakpoint"/>
                                                 <TableColumn text="#" prefWidth="30" fx:id="colNumber"/>
-                                                <TableColumn text="Type" prefWidth="60" fx:id="colType"/>
-                                                <TableColumn text="Label" prefWidth="60" fx:id="colLabel"/>
+                                                <TableColumn text="Type" prefWidth="55" fx:id="colType"/>
+                                                <TableColumn text="Arch" prefWidth="50" fx:id="colArch"/>
+                                                <TableColumn text="Label" prefWidth="50" fx:id="colLabel"/>
                                                 <TableColumn text="Instruction" prefWidth="160" fx:id="colInstruction"/>
-                                                <TableColumn text="Cycle" prefWidth="70" fx:id="colCycle"/>
+                                                <TableColumn text="Cycle" prefWidth="50" fx:id="colCycle"/>
                                             </columns>
                                         </TableView>
                                         <!-- Tree view -->
@@ -71,25 +77,25 @@
                                 </VBox>
                                 <Label text="Instruction history chain:" styleClass="section-label" alignment="TOP_CENTER"/>
                                 <VBox spacing="5" alignment="CENTER_LEFT" fillWidth="false" style="-fx-padding: 0 0 0 0;">
-                                    <TableView fx:id="historyInstrTable" prefHeight="150" prefWidth="460" VBox.vgrow="NEVER"
+                                    <TableView fx:id="historyInstrTable" prefHeight="150" prefWidth="500" VBox.vgrow="NEVER"
                                                style="-fx-border-color: gray; -fx-border-width: 2; -fx-border-radius: 5;">
                                         <columns>
                                             <TableColumn text="#" prefWidth="40" fx:id="colHistoryNumber"/>
-                                            <TableColumn text="Type" prefWidth="70" fx:id="colHistoryType"/>
-                                            <TableColumn text="Label" prefWidth="70" fx:id="colHistoryLabel"/>
+                                            <TableColumn text="Type" prefWidth="60" fx:id="colHistoryType"/>
+                                            <TableColumn text="Arch" prefWidth="60" fx:id="colHistoryArch"/>
+                                            <TableColumn text="Label" prefWidth="60" fx:id="colHistoryLabel"/>
                                             <TableColumn text="Instruction" prefWidth="160" fx:id="colHistoryInstruction"/>
-                                            <TableColumn text="Cycle" prefWidth="80" fx:id="colHistoryCycle"/>
+                                            <TableColumn text="Cycle" prefWidth="50" fx:id="colHistoryCycle"/>
                                         </columns>
                                     </TableView>
                                 </VBox>
                             </VBox>
                         </TitledPane>
                         <TitledPane text="Run-Debug" collapsible="false" prefWidth="850" >
-                            <VBox spacing="10" alignment="TOP_CENTER" fillWidth="true" style="-fx-padding: 10;">
+                            <VBox fx:id="runBox" spacing="10" alignment="TOP_CENTER" fillWidth="true" style="-fx-padding: 10;">
                                 <HBox fx:id="runButtonsBox" spacing="10" alignment="TOP_LEFT" style="-fx-padding: 0 0 0 10;" >
                                     <Button fx:id="runButton"
                                             text="Run"
-                                            disable="true"
                                             onAction="#onRun"
                                             contentDisplay="LEFT">
                                         <graphic>
@@ -102,7 +108,6 @@
                                     </Button>
                                     <Button fx:id="debugButton"
                                             text="Debug"
-                                            disable="true"
                                             onAction="#onDebug"
                                             contentDisplay="LEFT">
                                         <graphic>
@@ -119,7 +124,7 @@
                                 <VBox spacing="5" alignment="CENTER_LEFT" fillWidth="false" style="-fx-padding: 0 10 0 10;">
                                     <HBox fx:id="debugButtonsBox" spacing="10" alignment="TOP_LEFT" prefWidth="400">
                                         <Button fx:id="stopButton"
-                                                disable="true" onAction="#onStopDebug"
+                                                onAction="#onStopDebug"
                                                 contentDisplay="LEFT" HBox.hgrow="ALWAYS" maxWidth="Infinity" >
                                             <graphic>
                                                 <ImageView fitWidth="16" fitHeight="16">
@@ -130,7 +135,6 @@
                                             </graphic>
                                         </Button>
                                         <Button fx:id="resumeButton"
-                                                disable="true"
                                                 onAction="#onResumeDebug"
                                                 contentDisplay="LEFT" HBox.hgrow="ALWAYS" maxWidth="Infinity" >
                                             <graphic>
@@ -142,7 +146,6 @@
                                             </graphic>
                                         </Button>
                                         <Button fx:id="stepOverButton"
-                                                disable="true"
                                                 onAction="#onStepOver"
                                                 contentDisplay="LEFT" HBox.hgrow="ALWAYS" maxWidth="Infinity" >
                                             <graphic>
@@ -154,7 +157,6 @@
                                             </graphic>
                                         </Button>
                                         <Button fx:id="stepBackButton"
-                                                disable="true"
                                                 onAction="#onStepBackButton"
                                                 contentDisplay="LEFT" HBox.hgrow="ALWAYS" maxWidth="Infinity" >
                                             <graphic>

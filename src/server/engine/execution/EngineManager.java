@@ -6,16 +6,12 @@ import server.auth.UserProfile;
 import server.engine.impl.api.skeleton.AbstractOpBasic;
 import server.engine.input.XmlTranslator.Factory;
 import server.engine.program.FunctionExecutor;
-import server.engine.program.FunctionExecutorImpl;
 import server.engine.program.SprogramImpl;
+import shared.ExecutionStep;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class EngineManager {
@@ -105,6 +101,7 @@ public class EngineManager {
             Map<String, Object> row = new HashMap<>();
             row.put("number", idx++);
             row.put("type", op.getType());
+            row.put("arch", op.getArch());
             row.put("label", op.getLabel().getLabelRepresentation());
             row.put("instruction", op.getRepresentation());
             row.put("cycle", op.getCycles());
@@ -141,6 +138,7 @@ public class EngineManager {
             Map<String, Object> row = new HashMap<>();
             row.put("number", idx++);
             row.put("type", targetOp.getType());
+            row.put("arch", op.getArch());
             row.put("label", targetOp.getLabel().getLabelRepresentation());
             row.put("instruction", targetOp.getRepresentation());
             row.put("cycle", targetOp.getCycles());
@@ -285,6 +283,11 @@ public class EngineManager {
 
         return profile.fillHighlightOptions(options);
     }
+    public int getProgramInputVariables(String username, List<String> variables) {
+        UserProfile profile = UserManager.getActiveUsers().get(username);
+        if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
+        return profile.getInputVariables(variables);
+    }
 
     public int getDegreeProgram(String username) {
         UserProfile profile = UserManager.getActiveUsers().get(username);
@@ -311,5 +314,48 @@ public class EngineManager {
 
         UserManager.removeUser(username);
         return ERROR_CODES.ERROR_OK;
+    }
+
+    public int runProgram(String username, List<Long> userVars, List<ExecutionStep> executionDetails) {
+        UserProfile profile = UserManager.getActiveUsers().get(username);
+        if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
+
+        int result = profile.executeProgram(userVars, executionDetails);
+        return result;
+
+/*
+        if (program == null) return ERROR_CODES.ERROR_PROGRAM_NOT_FOUND;
+      FunctionExecutor program = profile.getWorkProgram();
+
+        int cost = program.calculateCost(userVars);
+        synchronized (profile) {
+            if (profile.getCredit() < cost) {
+                return ERROR_CODES.ERROR_INSUFFICIENT_CREDITS;
+            }
+            profile.setCredit(profile.getCredit() - cost);
+            profile.addSpentCredits(cost);
+            profile.incrementExecutions();
+        }
+
+        List<FunctionExecutor> functions = new ArrayList<>();
+        for (String funcName : program.getFuncNameList()) {
+            FunctionExecutor func = ProgramCollection.getFunction(funcName);
+            if (func != null) {
+                functions.add(func);
+            }
+        }
+*/
+      /*  List<Pair<Integer, TreeMap<VariableImpl, Long>>> execResult = ProgramExecutorImpl.run(program, userVars, functions);
+        executionDetails.addAll(execResult);*/
+
+        // Log execution statistics
+    /*    ExecStatistic stat = new ExecStatistic("Program", profile.getMainProgramName(), program.getArchitecture(),
+                program.getProgramDegree(), "Success", program.getTotalCycles(), java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        profile.addExecutionStat(stat);
+
+        // Update program execution stats
+        ProgramCollection.updateProgramStats(profile.getMainProgramName(), program.getTotalCycles());
+
+        return ERROR_CODES.ERROR_OK;*/
     }
 }

@@ -14,4 +14,5 @@ public class ERROR_CODES {
     public static final int ERROR_INVALID_INSTRUCTION_NUMBER = -10;
     public static final int ERROR_USER_EXISTS = -11;
     public static final int ERROR_INVALID_CREDENTIALS = -12;
+    public static final int ERROR_INVALID_INPUT_VARIABLES = -13;
 }

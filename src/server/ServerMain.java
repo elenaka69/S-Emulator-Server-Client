@@ -3,10 +3,13 @@ package server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import javafx.util.Pair;
 import server.engine.execution.ERROR_CODES;
 import server.engine.execution.EngineManager;
+import server.engine.variable.VariableImpl;
 import shared.BaseRequest;
 import shared.BaseResponse;
+import shared.ExecutionStep;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -61,6 +64,8 @@ public class ServerMain {
                 case  "getDegreeProgram" -> handleGetDegreeProgram(req);
                 case "expandProgram" -> handleExpandProgram(req);
                 case "collapseProgram" -> handleCollapseProgram(req);
+                case "getProgramInputVariables" -> handleGetProgramInputVariables(req);
+                case "runProgram" ->hanleRunProgram(req);
                 default -> new BaseResponse(false, "Unknown action: " + req.action);
             };
 
@@ -369,6 +374,48 @@ public class ServerMain {
             case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not found");
             case ERROR_CODES.ERROR_PROGRAM_NOT_FOUND -> new BaseResponse(false, "No program set for user");
             case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Program collapse successfully");
+            default -> new BaseResponse(false, "Server error");
+        };
+    }
+
+    private static BaseResponse handleGetProgramInputVariables(BaseRequest req) {
+        String username = getString(req, "username");
+        if (!validateParameter(username))
+            return new BaseResponse(false, "Invalid username");
+        List <String> variables = new ArrayList<>();
+        int result = EngineManager.getInstance().getProgramInputVariables(username, variables);
+        return switch (result) {
+            case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not found");
+            case ERROR_CODES.ERROR_PROGRAM_NOT_FOUND -> new BaseResponse(false, "No program set for user");
+            case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Input variables fetched successfully")
+                    .add("inputVariables", variables);
+            default -> new BaseResponse(false, "Server error");
+        };
+    }
+
+    private static BaseResponse hanleRunProgram(BaseRequest req) {
+        String username = getString(req, "username");
+        if (!validateParameter(username))
+            return new BaseResponse(false, "Invalid username");
+        List<Long> userVars  = new ArrayList<>();
+        Object varsObj = req.data.get("inputVariables");
+        if (varsObj instanceof List<?> varsList) {
+            for (Object var : varsList) {
+                if (var instanceof Number num) {
+                    userVars.add(num.longValue());
+                } else {
+                    return new BaseResponse(false, "Invalid input variable type");
+                }
+            }
+        }
+        List<ExecutionStep> executionDetails = new ArrayList<>();
+        int result = EngineManager.getInstance().runProgram(username, userVars, executionDetails);
+        return switch (result) {
+            case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not found");
+            case ERROR_CODES.ERROR_PROGRAM_NOT_FOUND -> new BaseResponse(false, "No program set for user");
+            case ERROR_CODES.ERROR_INVALID_INPUT_VARIABLES -> new BaseResponse(false, "Invalid input variables");
+            case ERROR_CODES.ERROR_NOT_ENOUGH_CREDIT -> new BaseResponse(false, "Insufficient credits");
+            case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Program executed successfully").add("runListMap", executionDetails);
             default -> new BaseResponse(false, "Server error");
         };
     }

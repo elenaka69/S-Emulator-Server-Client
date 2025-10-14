@@ -1,5 +1,6 @@
 package client;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -7,18 +8,23 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import server.engine.impl.api.skeleton.AbstractOpBasic;
+import javafx.util.Pair;
+import server.engine.variable.VariableImpl;
 import shared.BaseRequest;
 import shared.BaseResponse;
+import shared.ExecutionStep;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 public class ExecutionController {
@@ -26,7 +32,12 @@ public class ExecutionController {
     private final ObjectMapper mapper = new ObjectMapper();
     
     @FXML public Label usernameField;
+    @FXML public TextField creditsField;
     @FXML private Label statusBar;
+
+    @FXML public HBox runButtonsBox;
+    @FXML public VBox runBox;
+    private VBox paramBox;
 
     @FXML private Label expandLabel;
     @FXML private TextField expandField;
@@ -37,6 +48,7 @@ public class ExecutionController {
     @FXML private TableView<InstructionRow> instructionTable;
     @FXML private TableColumn<InstructionRow, Integer> colNumber;
     @FXML private TableColumn<InstructionRow, String> colType;
+    @FXML private TableColumn<InstructionRow, String> colArch;
     @FXML private TableColumn<InstructionRow, String> colLabel;
     @FXML private TableColumn<InstructionRow, String> colInstruction;
     @FXML private TableColumn<InstructionRow, Integer> colCycle;
@@ -44,6 +56,7 @@ public class ExecutionController {
     @FXML private TableView<InstructionBaseRow> historyInstrTable;
     @FXML private TableColumn<InstructionBaseRow, Integer> colHistoryNumber;
     @FXML private TableColumn<InstructionBaseRow, String> colHistoryType;
+    @FXML private TableColumn<InstructionBaseRow, String> colHistoryArch;
     @FXML private TableColumn<InstructionBaseRow, String> colHistoryLabel;
     @FXML private TableColumn<InstructionBaseRow, String> colHistoryInstruction;
     @FXML private TableColumn<InstructionBaseRow, Integer> colHistoryCycle;
@@ -56,6 +69,8 @@ public class ExecutionController {
     @FXML private TableColumn<ProgramHistoryRow, String> colHistoryRunInput;
     @FXML private TableColumn<ProgramHistoryRow, Integer> colHistoryRunResult;
     @FXML private TableColumn<ProgramHistoryRow, Integer> colHistoryRunCycle;
+    private final List<TextField> paramFields = new ArrayList<>();
+    private List<ExecutionStep> runListMap;
 
     private String clientUsername;
     private String programName;
@@ -66,6 +81,8 @@ public class ExecutionController {
     public void initialize() {
         setupProgramTable();
         setupHistoryTable();
+        setupWatchDebugTable();
+        setupProgramHistory();
 
         instructionTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
@@ -107,7 +124,8 @@ public class ExecutionController {
         });
     }
 
-    public void startExecutionBoard(String clientUsername, String programName) {
+    public void startExecutionBoard(String clientUsername, String programName, int credits) {
+        creditsField.setText(String.valueOf(credits));
         this.clientUsername = clientUsername;
         this.programName = programName;
         usernameField.setText(clientUsername);
@@ -165,13 +183,15 @@ public class ExecutionController {
     public static class InstructionBaseRow {
         private final Integer number;
         private final String type;
+        private final String arch;
         private final String label;
         private final String instruction;
         private final Integer cycle;
 
-        public InstructionBaseRow(int number, String type, String label, String instruction, int cycle) {
+        public InstructionBaseRow(int number, String type, String arch, String label, String instruction, int cycle) {
             this.number = number;
             this.type = type;
+            this.arch = arch;
             this.label = label;
             this.instruction = instruction;
             this.cycle = cycle;
@@ -192,6 +212,7 @@ public class ExecutionController {
         public Integer getCycle() {
             return cycle;
         }
+        public String getArch() { return arch; }
     }
 
     public static class InstructionRow extends InstructionBaseRow{
@@ -199,8 +220,8 @@ public class ExecutionController {
         private boolean breakpoint = false;
         private String strDataInstruction;
 
-        public InstructionRow(int number, String type, String label, String instruction, int cycle) {
-            super(number, type, label, instruction, cycle);
+        public InstructionRow(int number, String type, String arch, String label, String instruction, int cycle) {
+            super(number, type, arch, label, instruction, cycle);
             strDataInstruction = (label.isEmpty() ? "   " : label) + "  " + instruction + " (" + cycle + ")";
         }
 
@@ -289,6 +310,47 @@ public class ExecutionController {
     }
 
     public void onRun(ActionEvent actionEvent) {
+        if (checkAndConfirmParams()) {
+            List<Long> userVars = getUserVars();
+            BaseRequest req = new BaseRequest("runProgram")
+                    .add("username", clientUsername)
+                    .add("inputVariables", userVars);
+            sendRequest("http://localhost:8080/api", req, response -> {
+                if (response.ok) {
+                    runListMap = mapper.convertValue(
+                            response.data.get("runListMap"),
+                            new TypeReference<List<ExecutionStep>>() {}
+                    );
+
+                    Platform.runLater(() -> {
+                        if (runListMap == null || runListMap.isEmpty()) {
+                            showStatus("No execution data", Alert.AlertType.WARNING);
+                            return;
+                        }
+                        populateDebugTable(runListMap.size() - 1);
+                        showStatus(response.message, Alert.AlertType.INFORMATION);
+                    });
+                } else {
+                    Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+                }
+            });
+        }
+    }
+
+    private int populateDebugTable(int stepIndex) {
+        ExecutionStep currentStep = runListMap.get(stepIndex);
+        Map<String, Long> currentMap = currentStep.getVariables();
+
+        ObservableList<WatchDebugRow> data = FXCollections.observableArrayList();
+
+        for( Map.Entry<String, Long> entry :currentMap.entrySet()) {
+            data.add(new WatchDebugRow(
+                    entry.getKey(),
+                    entry.getValue()
+            ));
+        }
+        debugTable.setItems(data);
+        return currentStep.getStep();
     }
 
     public void onBackToDashboard(ActionEvent actionEvent) {
@@ -322,6 +384,7 @@ public class ExecutionController {
                     showStatus(response.message, Alert.AlertType.INFORMATION);
                     loadProgramInstructions();
                     loadHighlightComboBox();
+                    loadInputVariables();
                     setRangeDegree(0);
                     loadFuncsSelection();
                 });
@@ -334,6 +397,7 @@ public class ExecutionController {
     private void setupProgramTable() {
         colNumber.setCellValueFactory(new PropertyValueFactory<>("number"));
         colType.setCellValueFactory(new PropertyValueFactory<>("type"));
+        colArch.setCellValueFactory(new PropertyValueFactory<>("arch"));
         colLabel.setCellValueFactory(new PropertyValueFactory<>("label"));
         colInstruction.setCellValueFactory(new PropertyValueFactory<>("instruction"));
         colCycle.setCellValueFactory(new PropertyValueFactory<>("cycle"));
@@ -407,10 +471,26 @@ public class ExecutionController {
     private void setupHistoryTable() {
         colHistoryNumber.setCellValueFactory(new PropertyValueFactory<>("number"));
         colHistoryType.setCellValueFactory(new PropertyValueFactory<>("type"));
+        colHistoryArch.setCellValueFactory(new PropertyValueFactory<>("arch"));
         colHistoryLabel.setCellValueFactory(new PropertyValueFactory<>("label"));
         colHistoryInstruction.setCellValueFactory(new PropertyValueFactory<>("instruction"));
         colHistoryCycle.setCellValueFactory(new PropertyValueFactory<>("cycle"));
     }
+
+    private void setupWatchDebugTable() {
+        colVar.setCellValueFactory(new PropertyValueFactory<>("variable"));
+        colValue.setCellValueFactory(new PropertyValueFactory<>("value"));
+    }
+
+    private void setupProgramHistory() {
+        colHistoryRunNumber.setCellValueFactory(new PropertyValueFactory<>("number"));
+        colHistoryRunDegree.setCellValueFactory(new PropertyValueFactory<>("degree"));
+        colHistoryRunInput.setCellValueFactory(new PropertyValueFactory<>("input"));
+        colHistoryRunResult.setCellValueFactory(new PropertyValueFactory<>("result"));
+        colHistoryRunCycle.setCellValueFactory(new PropertyValueFactory<>("cycle"));
+    }
+
+
 
     private void loadFuncsSelection() {
         BaseRequest req = new BaseRequest("getProgramFunctions")
@@ -428,6 +508,72 @@ public class ExecutionController {
                     if (!funcList.isEmpty()) {
                         funcsComboBox.getSelectionModel().select(0);
                     }
+                } else {
+                    Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+                }
+            });
+        });
+    }
+
+    private boolean checkAndConfirmParams() {
+        boolean hasEmpty = paramFields.stream().anyMatch(f -> f.getText().isEmpty());
+
+        if (!hasEmpty) {
+            return true; // no empty, go ahead
+        }
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Empty Parameters");
+        alert.setHeaderText("Some parameter fields are empty.");
+        Label content = new Label("Empty fields will be treated as 0.\nDo you want to continue?");
+        content.setWrapText(true);
+        content.setAlignment(Pos.CENTER);
+
+        alert.getDialogPane().setContent(content);
+
+        ButtonType yesButton = new ButtonType("Yes", ButtonBar.ButtonData.YES);
+        ButtonType noButton = new ButtonType("No", ButtonBar.ButtonData.CANCEL_CLOSE);
+        alert.getButtonTypes().setAll(yesButton, noButton);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == yesButton) {
+            for (TextField field : paramFields) {
+                if (field.getText().trim().isEmpty()) {
+                    field.setText("0");
+                }
+            }
+            return true; // Continue
+        } else {
+            return false; // Cancel
+        }
+    }
+
+    private List<Long> getUserVars() {
+        List<Long> userVars = new ArrayList<>();
+        long value;
+        for (TextField field : paramFields) {
+            String text = field.getText();
+            if (!text.isEmpty())
+                value = Long.parseLong(text);
+            else
+                value = 0;
+            userVars.add(value);
+        }
+        return userVars;
+    }
+
+    private void loadInputVariables() {
+        BaseRequest req = new BaseRequest("getProgramInputVariables")
+                .add("username", clientUsername);
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            Platform.runLater(() -> {
+                if (response.ok) {
+                    List<String> variables = mapper.convertValue(
+                            response.data.get("inputVariables"),
+                            mapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                    );
+                    createRunParameterFields(variables);
                 } else {
                     Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
                 }
@@ -482,6 +628,7 @@ public class ExecutionController {
                         rows.add(new ExecutionController.InstructionRow(
                                 (Integer) instr.get("number"),
                                 (String) instr.get("type"),
+                                (String) instr.get("arch"),
                                 (String) instr.get("label"),
                                 (String) instr.get("instruction"),
                                 (Integer) instr.get("cycle")
@@ -513,6 +660,7 @@ public class ExecutionController {
                         rows.add(new ExecutionController.InstructionRow(
                                 (Integer) instr.get("number"),
                                 (String) instr.get("type"),
+                                (String) instr.get("arch"),
                                 (String) instr.get("label"),
                                 (String) instr.get("instruction"),
                                 (Integer) instr.get("cycle")
@@ -541,6 +689,7 @@ public class ExecutionController {
                     showStatus(response.message, Alert.AlertType.INFORMATION);
                     loadProgramInstructions();
                     loadHighlightComboBox();
+                    loadInputVariables();
                     setRangeDegree(0);
                 });
             } else {
@@ -566,6 +715,53 @@ public class ExecutionController {
                 Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
             }
         });
+    }
+
+    private TextField createIntegerField() {
+        TextField field = new TextField();
+
+        UnaryOperator<TextFormatter.Change> filter = change -> {
+            String newText = change.getControlNewText();
+            if (newText.matches("-?\\d*")) { // optional minus + digits only
+                return change;
+            }
+            return null; // reject change
+        };
+
+        field.setTextFormatter(new TextFormatter<>(filter));
+        return field;
+    }
+
+    public void createRunParameterFields(List<String> variables) {
+        // Remove old paramBox if it exists
+        if (paramBox != null) {
+            runBox.getChildren().remove(paramBox);
+        }
+        paramFields.clear();
+
+        if (variables == null || variables.isEmpty())
+            return;
+
+        Label paramLabel = new Label("Enter variables");
+        paramLabel.setAlignment(Pos.CENTER);
+
+        // Create a new HBox to hold TextFields
+        HBox fieldsBox = new HBox(10);
+        fieldsBox.setAlignment(Pos.CENTER);
+
+        for (String varName : variables) {
+            TextField field = createIntegerField();
+            field.setPromptText(varName);
+            field.setPrefWidth(80);
+            fieldsBox.getChildren().add(field);
+            paramFields.add(field);
+        }
+        paramBox = new VBox(5, paramLabel, fieldsBox);
+        paramBox.setAlignment(Pos.CENTER);
+
+        // Insert the paramBox between Label and Button
+        int insertIndex = runBox.getChildren().indexOf(runButtonsBox);
+        runBox.getChildren().add(insertIndex, paramBox);
     }
 
     private void sendRequest(String url, BaseRequest req, Consumer<BaseResponse> onSuccess) {
