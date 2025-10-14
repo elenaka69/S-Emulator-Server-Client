@@ -82,6 +82,29 @@ public class ExecutionController {
             highlightText = newValue;
             instructionTable.refresh();
         });
+
+        instructionTable.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                Stage stage = (Stage) newScene.getWindow();
+                stage.setOnCloseRequest(event -> {
+                    onClose();
+                });
+            }
+        });
+    }
+
+    private void onClose() {
+        shutdown();
+    }
+
+    private void shutdown() {
+        BaseRequest req = new BaseRequest("removeUser").add("username", clientUsername);
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            if (!response.ok) {
+                Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+            }
+        });
     }
 
     public void startExecutionBoard(String clientUsername, String programName) {
