@@ -44,9 +44,11 @@ public class ServerMain {
             }
 
             response = switch (req.action) {
+                /* Login Page */
                 case "login" -> handleLogin(req);
                 case "logout" -> handleLogout(req);
                 case "removeUser" -> handleRemoveUser(req);
+                /* DashBoard page */
                 case "getCredits" -> handleGetCredits(req);
                 case "chargeCredits" -> handleChargeCredits(req);
                 case "getUsers" -> handleGetUsers(req);
@@ -55,6 +57,7 @@ public class ServerMain {
                 case "ping" -> new BaseResponse(true, "pong");
                 case "getPrograms" -> handlePrograms(req);
                 case "getFunctions" -> handleFunctions(req);
+                /* Execution Page */
                 case "setProgramToUser" -> handleExecuteProgram(req);
                 case "getProgramInstructions" -> handleGetInstructions(req);
                 case "getHistoryInstruction" -> handleGetInstructionHistory(req);
@@ -241,6 +244,7 @@ public class ServerMain {
     private static BaseResponse handleExecuteProgram(BaseRequest req) {
         String username = getString(req, "username");
         String programName = getString(req, "programName");
+        Boolean isProgram = getBoolean(req, "isProgram");
 
         if (!validateParameter(username)) {
             return new BaseResponse(false, "Invalid username");
@@ -250,9 +254,14 @@ public class ServerMain {
             return new BaseResponse(false, "Invalid programName");
         }
 
-        int result = EngineManager.getInstance().setProgramToUser(username, programName);
+        if (!validateParameter(isProgram)) {
+            return new BaseResponse(false, "Invalid isProgram");
+        }
+
+        int result = EngineManager.getInstance().setProgramToUser(username, programName, isProgram);
         return switch (result) {
             case ERROR_CODES.ERROR_PROGRAM_NOT_FOUND -> new BaseResponse(false, "Program not found");
+            case ERROR_CODES.ERROR_FUNCTION_NOT_FOUND -> new BaseResponse(false, "Function not found");
             case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not found");
             case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Program set successfully");
             default -> new BaseResponse(false, "Server error");
@@ -302,13 +311,18 @@ public class ServerMain {
 
     private static BaseResponse handleGetProgramFunctions(BaseRequest req) {
         String programName = getString(req, "programName");
+        String username = getString(req, "username");
+
+        if (!validateParameter(username))
+            return new BaseResponse(false, "Invalid username");
+
         if (!validateParameter(programName)) {
             return new BaseResponse(false, "Invalid programName");
         }
 
         List<String> functions = new ArrayList<>();
         functions.add(programName);
-        int result = EngineManager.getInstance().getProgramFunctions(programName, functions);
+        int result = EngineManager.getInstance().getProgramFunctions(username, functions);
         return switch (result) {
             case ERROR_CODES.ERROR_PROGRAM_NOT_FOUND -> new BaseResponse(false, "Program not found");
             case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Functions fetched")
@@ -447,6 +461,10 @@ public class ServerMain {
         return (param != null);
     }
 
+    private static boolean validateParameter(Boolean param) {
+        return (param != null);
+    }
+
     private static String getString(BaseRequest req, String key) {
         Object val = req.data.get(key);
         return val instanceof String ? (String) val : null;
@@ -455,6 +473,16 @@ public class ServerMain {
     private static Integer getInt(BaseRequest req, String key) {
         Object val = req.data.get(key);
         return val instanceof Number ? ((Number) val).intValue() : null;
+    }
+
+    private static Boolean getBoolean(BaseRequest req, String key) {
+        Object value = req.data.get(key);
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        } else if (value instanceof String) {
+            return Boolean.parseBoolean((String) value);
+        }
+        return null;
     }
 
     private static void sendResponse(HttpExchange ex, int status, BaseResponse resp) throws IOException {

@@ -75,15 +75,26 @@ public class EngineManager {
         }
     }
 
-    public int setProgramToUser(String username, String programName) {
+    public int setProgramToUser(String username, String programName, Boolean isProgram) {
         UserProfile profile = UserManager.getActiveUsers().get(username);
-        SprogramImpl program = ProgramCollection.getProgram(programName);
-
         if (profile == null) return ERROR_CODES.ERROR_USER_NOT_FOUND;
-        if (program == null) return ERROR_CODES.ERROR_PROGRAM_NOT_FOUND;
 
-        // Clone program for user
-        profile.setMainProgram((SprogramImpl) program.myClone(), programName);
+        if (isProgram) {
+            SprogramImpl program = ProgramCollection.getProgram(programName);
+            if (program == null) return ERROR_CODES.ERROR_PROGRAM_NOT_FOUND;
+
+            // Clone program for user
+            profile.setMainProgram((SprogramImpl) program.myClone(), programName);
+        } else {
+            FunctionExecutor function = ProgramCollection.getFunction(programName);
+            if (function == null) return ERROR_CODES.ERROR_FUNCTION_NOT_FOUND;
+
+            // Set function as working function for user
+            int res = profile.setFunctionAsMainProgram(function, programName);
+            if (res != ERROR_CODES.ERROR_OK) {
+                return res;
+            }
+        }
         return ERROR_CODES.ERROR_OK;
     }
 
@@ -263,11 +274,11 @@ public class EngineManager {
         return ERROR_CODES.ERROR_OK;
     }
 
-    public int getProgramFunctions(String programName, List<String> functionNames) {
-        SprogramImpl program = ProgramCollection.getProgram(programName);
-        if (program == null) return ERROR_CODES.ERROR_PROGRAM_NOT_FOUND;
-        functionNames.addAll(program.getFuncNameList());;
-        return ERROR_CODES.ERROR_OK;
+    public int getProgramFunctions(String username, List<String> functionNames) {
+        UserProfile profile = UserManager.getActiveUsers().get(username);
+        if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
+
+        return profile.getProgramFunctions(functionNames);
     }
 
     public int setWokFunctionToUser(String username, String funcName) {

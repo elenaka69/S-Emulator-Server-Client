@@ -135,12 +135,12 @@ public class ExecutionController {
         });
     }
 
-    public void startExecutionBoard(String clientUsername, String programName, int credits) {
+    public void startExecutionBoard(String clientUsername, String programName, boolean isProgram, int credits) {
         creditsField.setText(String.valueOf(credits));
         this.clientUsername = clientUsername;
         this.programName = programName;
         usernameField.setText(clientUsername);
-        setProgramToUser();
+        setProgramToUser(isProgram);
         showStatus("Loaded program: " + programName, Alert.AlertType.INFORMATION);
     }
 
@@ -512,10 +512,10 @@ public class ExecutionController {
         }
     }
 
-    private void setProgramToUser() {
+    private void setProgramToUser(boolean isProgram) {
         BaseRequest req = new BaseRequest("setProgramToUser")
                 .add("username", clientUsername)
-                .add("programName", programName);
+                .add("programName", programName).add("isProgram", isProgram);
 
         sendRequest("http://localhost:8080/api", req, response -> {
             if (response.ok) {
@@ -661,6 +661,7 @@ public class ExecutionController {
 
     private void loadFuncsSelection() {
         BaseRequest req = new BaseRequest("getProgramFunctions")
+                .add("username", clientUsername)
                 .add("programName", programName);
 
         sendRequest("http://localhost:8080/api", req, response -> {

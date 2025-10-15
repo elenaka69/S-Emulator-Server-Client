@@ -15,6 +15,25 @@ public class SprogramImpl extends FunctionExecutorImpl {
         functions = null;
     }
 
+    public SprogramImpl(FunctionExecutorImpl other) {
+        super(other.getName());
+
+        if (other.opList != null) {
+            for (AbstractOpBasic op : other.opList) {
+                addOp(op.myClone());
+            }
+        }
+        this.cost = other.cost;
+        this.averageCost = other.averageCost;
+        this.maxDegree = other.maxDegree;
+        this.inputVars = other.inputVars != null ? new ArrayList<>(other.inputVars) : null;
+        setContext(other.context);
+        this.variables = other.variables != null ? new HashSet<>(other.variables) : null;
+        this.origVariables = other.origVariables != null ? new HashSet<>(other.origVariables) : null;
+        this.labelsHashSet = other.labelsHashSet != null ? new LinkedHashSet<>(other.labelsHashSet) : null;
+        functions = null;
+    }
+
     public void addFunction(FunctionExecutor func) {
         if (functions == null)
             functions = new ArrayList<>();
@@ -114,6 +133,7 @@ public class SprogramImpl extends FunctionExecutorImpl {
         newProgram.cost = this.cost;
         newProgram.maxDegree = this.maxDegree;
         newProgram.setFunctions(this.funcNameList);
+        newProgram.averageCost = this.averageCost;
 
         if (functions != null) {
             functions.forEach(func->{

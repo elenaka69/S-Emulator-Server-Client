@@ -81,6 +81,10 @@ public class DashboardController {
     private String selectedUser;
     private String selectedProgram = null;
     private int selectedProgramCost = 0;
+    private final int SELECT_NONE = -1;
+    private final int SELECT_PROGRAM = 1;
+    private final int SELECT_FUNCTION = 2;
+    private int typeProgramSelected = SELECT_NONE;
 
     @FXML
     public void initialize() {
@@ -115,11 +119,29 @@ public class DashboardController {
 
         programsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
             if (newSel != null) {
+                typeProgramSelected = SELECT_PROGRAM;
                 selectedProgramCost = newSel.getMaxCost(); // TODO chane to average cost?
                 selectedProgram = newSel.getName();
+                Platform.runLater(() -> functionsTable.getSelectionModel().clearSelection());
             } else {
+                if (typeProgramSelected == SELECT_FUNCTION) return;
                 selectedProgram = null;
                 selectedProgramCost = 0;
+                typeProgramSelected = SELECT_NONE;
+            }
+        });
+
+        functionsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            if (newSel != null) {
+                typeProgramSelected = SELECT_FUNCTION;
+                selectedProgramCost = 0; // TODO get function cost?
+                selectedProgram = newSel.getName();
+                Platform.runLater(() -> programsTable.getSelectionModel().clearSelection());
+            } else {
+                if (typeProgramSelected == SELECT_PROGRAM) return;
+                selectedProgram = null;
+                selectedProgramCost = 0;
+                typeProgramSelected = SELECT_NONE;
             }
         });
 
@@ -257,17 +279,24 @@ public class DashboardController {
 
     @FXML
     public void onExecuteProgram(ActionEvent actionEvent) {
+        if (typeProgramSelected == SELECT_NONE) {
+            showAlert("Program","⚠ Please select a program or function to execute.", Alert.AlertType.WARNING);
+            return;
+        }
+
         if (selectedProgram == null) {
             showAlert("Program","⚠ Please select a program to execute.", Alert.AlertType.WARNING);
             return;
         }
-        if (selectedProgramCost > Integer.parseInt(creditsField.getText())) {
-            showAlert("Insufficient Credits",
-                    "You do not have enough credits to execute this program.\n" +
-                            "Program Cost: " + selectedProgramCost + "\n" +
-                            "Your Credits: " + creditsField.getText(),
-                    Alert.AlertType.WARNING);
-            return;
+        if (typeProgramSelected == SELECT_PROGRAM) {
+            if (selectedProgramCost > Integer.parseInt(creditsField.getText())) {
+                showAlert("Insufficient Credits",
+                        "You do not have enough credits to execute this program.\n" +
+                                "Program Cost: " + selectedProgramCost + "\n" +
+                                "Your Credits: " + creditsField.getText(),
+                        Alert.AlertType.WARNING);
+                return;
+            }
         }
 
         openExecution();
@@ -280,7 +309,7 @@ public class DashboardController {
 
             // Pass the username to dashboard controller
             ExecutionController controller = loader.getController();
-            controller.startExecutionBoard(clientUsername, selectedProgram, Integer.parseInt(creditsField.getText()));
+            controller.startExecutionBoard(clientUsername, selectedProgram, typeProgramSelected == SELECT_PROGRAM, Integer.parseInt(creditsField.getText()));
 
             Stage stage = (Stage) usernameField.getScene().getWindow(); // reuse same stage
             stage.setScene(new Scene(root));

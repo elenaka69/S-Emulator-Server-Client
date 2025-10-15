@@ -17,7 +17,7 @@ import javafx.util.Pair;
 
 public class FunctionExecutorImpl implements FunctionExecutor {
 
-    protected final String name;
+    protected String name;
     protected  List<AbstractOpBasic> opList;
     protected int cycles;
     protected int opListIndex;
@@ -288,6 +288,7 @@ public class FunctionExecutorImpl implements FunctionExecutor {
         newFunc.cost = this.cost;
         newFunc.maxDegree = this.maxDegree;
         newFunc.parentProgram = this.parentProgram;
+        newFunc.averageCost = this.averageCost;
         return newFunc;
     }
 

@@ -2,9 +2,13 @@ package server.auth;
 
 import javafx.util.Pair;
 import server.engine.execution.ERROR_CODES;
+import server.engine.execution.ProgramCollection;
 import server.engine.execution.ProgramExecutorImpl;
+import server.engine.impl.api.skeleton.AbstractOpBasic;
+import server.engine.impl.api.synthetic.OpFunctionBase;
 import server.engine.label.Label;
 import server.engine.program.FunctionExecutor;
+import server.engine.program.FunctionExecutorImpl;
 import server.engine.program.SprogramImpl;
 import server.engine.variable.VariableImpl;
 import shared.ExecutionStep;
@@ -178,6 +182,87 @@ public class UserProfile {
             return ERROR_CODES.ERROR_OK;
         }
         return ERROR_CODES.ERROR_FUNCTION_NOT_FOUND;
+    }
+
+    public int setFunctionAsMainProgram(FunctionExecutor function, String programName) {
+        Set<String> sunFunctions = new HashSet<>();
+
+        for (AbstractOpBasic op : function.getOps()) {
+            if (op instanceof OpFunctionBase) {
+                String funName = ((OpFunctionBase) op).getFunctionName();
+                String functionArgs = ((OpFunctionBase) op).getStrFunctionArguments();
+                extractFunctions(funName, functionArgs, sunFunctions);
+            }
+        }
+
+        chosenMainProgram = new SprogramImpl((FunctionExecutorImpl) function);
+
+        chosenMainProgram.setFunctions(sunFunctions);
+
+        chosenMainProgram.updateFunctions();
+
+        this.workingFunction = chosenMainProgram;
+        this.mainProgramName = programName;
+
+        return ERROR_CODES.ERROR_OK;
+    }
+
+    private int extractFunctions(String funcName, String funcArgs, Set<String> functions) {
+
+        functions.add(funcName);
+
+        int i = 0;
+        int len = funcArgs.length();
+        while (true) {
+            String word = "";
+            // Find next '('
+            int start = funcArgs.indexOf('(', i);
+            if (start == -1) break;
+
+            // Move to first character after '('
+            int pos = start + 1;
+
+            while (pos < len && Character.isWhitespace(funcArgs.charAt(pos))) {
+                pos++;
+            }
+
+            // if next char is '(' then there's no word right after this '('
+            if (pos < len && funcArgs.charAt(pos) == '(') {
+                i = start + 1; // continue search after this '('
+                continue;
+            }
+
+            // Extract a word until ',' or ')' or whitespace
+            int wordStart = pos;
+            while (pos < len &&
+                    funcArgs.charAt(pos) != ',' &&
+                    funcArgs.charAt(pos) != ')' &&
+                    !Character.isWhitespace(funcArgs.charAt(pos))) {
+                pos++;
+            }
+
+            if (wordStart < pos) {
+                word = funcArgs.substring(wordStart, pos);
+                if (!ProgramCollection.isFunctionExists(word))
+                    return ERROR_CODES.ERROR_FUNCTION_MISSING;
+                functions.add(word);
+            }
+
+            // continue searching for the next '(' after current '('
+            i = start + 1;
+        }
+
+        return ERROR_CODES.ERROR_OK;
+    }
+
+    public int getProgramFunctions(List<String> functionNames) {
+        if (chosenMainProgram != null) {
+            Set<String> funcNameList = chosenMainProgram.getFuncNameList();
+            functionNames.addAll(funcNameList);
+            return ERROR_CODES.ERROR_OK;
+        }
+        return ERROR_CODES.ERROR_PROGRAM_NOT_FOUND;
+
     }
 }
 
