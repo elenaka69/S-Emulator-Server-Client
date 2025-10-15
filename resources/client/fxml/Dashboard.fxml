@@ -32,7 +32,7 @@
             <!-- File selection + Load -->
             <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 0 0 0 10;">
                 <Button fx:id="loadButton" text="Load..." onAction="#onLoadFile"/>
-                <TextField fx:id="filePathField" promptText="Selected file path" prefWidth="315"/>
+                <TextField fx:id="filePathField" promptText="Selected file path" prefWidth="380"/>
                 <Region HBox.hgrow="ALWAYS"/>
 
                 <!-- Available Credits -->
@@ -42,7 +42,7 @@
                 <TextField fx:id="chargeAmountField" prefWidth="80"/>
             </HBox>
             <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 0 0 0;">
-                <ProgressBar fx:id="progressBar" prefHeight="20" prefWidth="400" progress="0.0" style="-fx-padding: 0 0 0 10;"/>
+                <ProgressBar fx:id="progressBar" prefHeight="20" prefWidth="465" progress="0.0" style="-fx-padding: 0 0 0 10;"/>
             <!--        <Region HBox.hgrow="ALWAYS"/>
                     <Button text="Logout" onAction="#onLogout"/>-->
                 </HBox>
