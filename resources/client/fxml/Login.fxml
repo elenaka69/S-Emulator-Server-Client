@@ -43,7 +43,7 @@
                 </HBox>
             </VBox>
             <!-- Login button -->
-            <Button text="Login" onAction="#onLogin" styleClass="button" prefWidth="100"/>
+            <Button text="Login" onAction="#onLogin" styleClass="button" prefWidth="100" defaultButton="true"/>
         </VBox>
     </center>
 
