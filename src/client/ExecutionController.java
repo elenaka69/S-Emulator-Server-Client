@@ -22,7 +22,6 @@ import shared.BaseResponse;
 import shared.ExecutionStep;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
@@ -336,19 +335,13 @@ public class ExecutionController {
     }
 
     public void onStopDebug(ActionEvent actionEvent) {
-        currentHighlightedStep = -1;
-        currentStepIndex = 0;
-        instructionTable.scrollTo(0);
-        instructionTable.refresh();
+        setDebuggingMode(false);
     }
 
     public void onDebug(ActionEvent actionEvent) {
         runRoutine(success -> {
             if (success) {
-                currentHighlightedStep = -1;
-                currentStepIndex = 0;
-                instructionTable.refresh();
-                instructionTable.scrollTo(0);
+                setDebuggingMode(true);
                 stepOverRoutine();
             }
         });
@@ -358,6 +351,7 @@ public class ExecutionController {
         runRoutine(success -> {
             if (success) {
                 populateDebugTable(runListMap.size() - 1);
+                setDebuggingMode(false);
                 setStatistics();
             }
         });
@@ -369,22 +363,24 @@ public class ExecutionController {
 
         if(currentStepIndex >= runListMap.size()){
             setStatistics();
+            setDebuggingMode(false);
             showStatus("Debug finished.", Alert.AlertType.INFORMATION);
             return;
         }
 
         currentHighlightedStep = populateDebugTable(currentStepIndex);
         currentStepIndex++;
-        Platform.runLater(() -> {
-            instructionTable.scrollTo(currentHighlightedStep);
-            instructionTable.refresh();
-        });
-
         if(currentStepIndex >= runListMap.size())
         {
             setStatistics();
+            setDebuggingMode(false);
             showStatus("Debug finished.", Alert.AlertType.INFORMATION);
             return;
+        } else {
+            Platform.runLater(() -> {
+                instructionTable.scrollTo(currentHighlightedStep);
+                instructionTable.refresh();
+            });
         }
     }
 
@@ -417,6 +413,28 @@ public class ExecutionController {
             callback.accept(false);
         }
     }
+
+    private void enableControls(boolean isEnable)
+    {
+        stepOverButton.setDisable(!isEnable);
+        stepBackButton.setDisable(!isEnable);
+        stopButton.setDisable(!isEnable);
+        resumeButton.setDisable(!isEnable);
+        runButton.setDisable(isEnable);
+        debugButton.setDisable(isEnable);
+        expandButton.setDisable(isEnable);
+        collapseButton.setDisable(isEnable);
+    }
+
+   private void setDebuggingMode(boolean active)
+    {
+        currentHighlightedStep = -1;
+        currentStepIndex = 0;
+        enableControls(active);
+        instructionTable.scrollTo(0);
+        instructionTable.refresh();
+    }
+
 
     private void updateProgramStatisticTable(long result, int cycles)
     {

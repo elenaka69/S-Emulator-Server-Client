@@ -125,6 +125,7 @@
                                     <HBox fx:id="debugButtonsBox" spacing="10" alignment="TOP_LEFT" prefWidth="400">
                                         <Button fx:id="stopButton"
                                                 onAction="#onStopDebug"
+                                                disable="true"
                                                 contentDisplay="LEFT" HBox.hgrow="ALWAYS" maxWidth="Infinity" >
                                             <graphic>
                                                 <ImageView fitWidth="16" fitHeight="16">
@@ -136,6 +137,7 @@
                                         </Button>
                                         <Button fx:id="resumeButton"
                                                 onAction="#onResumeDebug"
+                                                disable="true"
                                                 contentDisplay="LEFT" HBox.hgrow="ALWAYS" maxWidth="Infinity" >
                                             <graphic>
                                                 <ImageView fitWidth="16" fitHeight="16">
@@ -147,6 +149,7 @@
                                         </Button>
                                         <Button fx:id="stepOverButton"
                                                 onAction="#onStepOver"
+                                                disable="true"
                                                 contentDisplay="LEFT" HBox.hgrow="ALWAYS" maxWidth="Infinity" >
                                             <graphic>
                                                 <ImageView fitWidth="16" fitHeight="16">
@@ -158,6 +161,7 @@
                                         </Button>
                                         <Button fx:id="stepBackButton"
                                                 onAction="#onStepBackButton"
+                                                disable="true"
                                                 contentDisplay="LEFT" HBox.hgrow="ALWAYS" maxWidth="Infinity" >
                                             <graphic>
                                                 <ImageView fitWidth="16" fitHeight="16">
