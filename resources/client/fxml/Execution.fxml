@@ -52,11 +52,6 @@
                                     <fx:define>
                                         <ToggleGroup fx:id="viewToggleGroup"/>
                                     </fx:define>
-                                    <HBox spacing="10" alignment="CENTER_LEFT">
-                                        <Label text="View Mode:"/>
-                                        <RadioButton fx:id="tableRadio" text="Table" selected="true" toggleGroup="$viewToggleGroup"/>
-                                        <RadioButton fx:id="treeRadio" text="Tree" toggleGroup="$viewToggleGroup"/>
-                                    </HBox>
                                     <StackPane fx:id="viewStack" prefHeight="200" prefWidth="460">
                                         <!-- Table view -->
                                         <TableView fx:id="instructionTable" prefHeight="200" prefWidth="500" VBox.vgrow="NEVER"
@@ -71,8 +66,6 @@
                                                 <TableColumn text="Cycle" prefWidth="50" fx:id="colCycle"/>
                                             </columns>
                                         </TableView>
-                                        <!-- Tree view -->
-                                        <TreeView fx:id="programTree" visible="false" managed="false"/>
                                     </StackPane>
                                 </VBox>
                                 <Label text="Instruction history chain:" styleClass="section-label" alignment="TOP_CENTER"/>

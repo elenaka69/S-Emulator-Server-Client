@@ -74,6 +74,7 @@ public class ExecutionController {
     @FXML private TableColumn<ProgramHistoryRow, String> colHistoryRunInput;
     @FXML private TableColumn<ProgramHistoryRow, Integer> colHistoryRunResult;
     @FXML private TableColumn<ProgramHistoryRow, Integer> colHistoryRunCycle;
+
     private final List<TextField> paramFields = new ArrayList<>();
     private List<String> inputVariables = new ArrayList<>();
     private List<ExecutionStep> runListMap;
