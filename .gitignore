@@ -39,3 +39,8 @@ out/
 target/
 bin/
 dist/*.jar
+
+*.docx
+*.pdf
+*.xlsx
+*.pptx
