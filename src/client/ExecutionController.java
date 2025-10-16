@@ -387,6 +387,11 @@ public class ExecutionController {
             return;
         }
 
+        if (!checkCreditsBeforeStep(runListMap.get(currentStepIndex).getStepCost())) {
+            setDebuggingMode(false);
+            return;
+        }
+
         currentHighlightedStep = populateDebugTable(currentStepIndex);
         currentStepIndex++;
         if(currentStepIndex >= runListMap.size())
@@ -401,6 +406,30 @@ public class ExecutionController {
                 instructionTable.refresh();
             });
         }
+    }
+
+    private boolean checkCreditsBeforeStep(int stepCost) {
+
+        if (stepCost == 0) return true; // first step for debugging, no cost
+        int userCredit = Integer.parseInt(creditsField.getText());
+        if (userCredit < stepCost) {
+            showAlert("Insufficient Credits", "You do not have enough credits to continue debugging.\n" +
+                    "Please run the program in normal mode or acquire more credits.", Alert.AlertType.ERROR);
+            return false;
+        } else {
+            BaseRequest req = new BaseRequest("deductCredit").
+                    add("username", clientUsername).add("cost", stepCost);
+            sendRequest("http://localhost:8080/api", req, response -> {
+                if (response.ok) {
+                    Platform.runLater(() -> {
+                        creditsField.setText(String.valueOf(response.data.get("newBalance")));
+                    });
+                } else {
+                    Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+                }
+            });
+        }
+        return true;
     }
 
     private void runRoutine(Consumer<Boolean> callback, boolean isDebugMode)

@@ -70,6 +70,7 @@ public class ServerMain {
                 case "getProgramInputVariables" -> handleGetProgramInputVariables(req);
                 case "runProgram" -> hanleRunProgram(req);
                 case "getRunStatistic" -> handleGetRunStatistic(req);
+                case "deductCredit" -> handleDeductCredits(req);
                 default -> new BaseResponse(false, "Unknown action: " + req.action);
             };
 
@@ -459,6 +460,30 @@ public class ServerMain {
                     .add("cycles", runStatistics.get(1));
             default -> new BaseResponse(false, "Server error");
         };
+    }
+
+    private static BaseResponse handleDeductCredits(BaseRequest req) {
+        String username = getString(req, "username");
+        Integer amount = getInt(req, "cost");
+        if (!validateParameter(username)) {
+            return new BaseResponse(false, "Invalid username");
+        }
+        if (!validateParameter(amount)) {
+            return new BaseResponse(false, "Invalid credits amount");
+        }
+
+        int newBalance = EngineManager.getInstance().deductCredits(username, amount);
+
+        if (newBalance == ERROR_CODES.ERROR_USER_NOT_FOUND)
+            return new BaseResponse(false, "User not logged in");
+        if (newBalance == ERROR_CODES.ERROR_INVALID_CREDENTIALS)
+            return new BaseResponse(false, "Invalid amount");
+        if (newBalance == ERROR_CODES.ERROR_NOT_ENOUGH_CREDIT)
+            return new BaseResponse(false, "Not enough credits");
+        if (newBalance < 0)
+            return new BaseResponse(false, "Server error");
+
+        return new BaseResponse(true, "Deducted successfully").add("newBalance", newBalance);
     }
 
     // ---------------------- UTILITIES ----------------------

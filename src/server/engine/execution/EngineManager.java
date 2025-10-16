@@ -341,4 +341,17 @@ public class EngineManager {
 
         return profile.getRunStatistics(runStatistics);
     }
+
+    public int deductCredits(String username, Integer amount) {
+        UserProfile profile = UserManager.getActiveUsers().get(username);
+        if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
+
+        if (amount == null || amount <= 0) return ERROR_CODES.ERROR_INVALID_CREDENTIALS;
+
+        int result = profile.deductCredit(amount);
+        if(result == ERROR_CODES.ERROR_OK) {
+            return profile.getCredit();
+        }
+        return result;
+    }
 }
