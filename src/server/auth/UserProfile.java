@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class UserProfile {
-    private static final int CREDIT_START = 20000;
+    private static final int CREDIT_START = 0;
 
     private final String username;
     private final LocalDateTime loginTime;
