@@ -31,7 +31,7 @@ public class OPJumpEqualFunction extends OpFunctionBase implements LabelJumper {
     }
     public OPJumpEqualFunction(OPJumpEqualFunction src)
     {
-        super(OpData.JUMP_EQUAL_FUNCTION, src.getVariable(), src.getLabel(), src.getFunctionName(), src.getStrFunctionArguments(), null);
+        super(OpData.JUMP_EQUAL_FUNCTION, src.getVariable().myClone(), src.getLabel().myClone(), src.getFunctionName(), src.getStrFunctionArguments(), null);
         this.JEFunctionLabel = src.getJEFunctionLabel();
         generateUniqId();
     }
@@ -49,6 +49,7 @@ public class OPJumpEqualFunction extends OpFunctionBase implements LabelJumper {
     @Override
     public Label execute(FunctionExecutor program, List <FunctionExecutor> functions) {
         Long result = ((FunctionExecutorImpl)function).run(program, functionArguments, functions);
+        program.increaseCycleCounter(getCycles());
         if (program.getVariableValue(getVariable()).equals(result))
             return JEFunctionLabel;
 

@@ -1,10 +1,11 @@
 package server.engine.program;
 
-import javafx.util.Pair;
+import server.auth.UserProfile;
 import server.engine.execution.ExecutionContext;
 import server.engine.impl.api.skeleton.AbstractOpBasic;
 import server.engine.label.Label;
 import server.engine.variable.VariableImpl;
+import shared.ExecutionStep;
 
 import java.util.*;
 
@@ -53,8 +54,9 @@ public interface FunctionExecutor
     void init();
     void restoreOriginalVars();
     void resetSnap();
-    List<Pair<Integer, TreeMap<VariableImpl, Long>>> run(List<Long> inputs, List <FunctionExecutor> functions);
+    int run(List<Long> inputs, List <FunctionExecutor> functions, List<ExecutionStep> executionDetails, UserProfile owner, boolean b);
     void changeInputVar(Map<VariableImpl, VariableImpl> vars);
     void setParentProgram(SprogramImpl chosenMainProgram);
     SprogramImpl getParentProgram();
+    String getUserString();
 }

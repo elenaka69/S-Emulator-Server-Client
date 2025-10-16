@@ -42,10 +42,10 @@ public class OpJumpNotZero extends AbstractOpBasic implements LabelJumper {
     @Override
     public Label execute(FunctionExecutor program) {
         Long variableValue = program.getVariableValue(getVariable());
+        program.increaseCycleCounter(getCycles());
         if (variableValue != 0) {
             return jnzLabel;
         }
-        program.increaseCycleCounter(getCycles());
         return FixedLabel.EMPTY;
     }
 

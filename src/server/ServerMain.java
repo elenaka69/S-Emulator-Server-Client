@@ -410,8 +410,17 @@ public class ServerMain {
 
     private static BaseResponse hanleRunProgram(BaseRequest req) {
         String username = getString(req, "username");
+        Boolean isDebugMode = getBoolean(req, "isDebugMode");
+        int degree = getInt(req, "degree");
+
         if (!validateParameter(username))
             return new BaseResponse(false, "Invalid username");
+        if (!validateParameter(isDebugMode))
+            return new BaseResponse(false, "Invalid isDebug parameter");
+        if (!validateParameter(degree))
+            return new BaseResponse(false, "Invalid degree parameter");
+
+
         List<Long> userVars  = new ArrayList<>();
         Object varsObj = req.data.get("inputVariables");
         if (varsObj instanceof List<?> varsList) {
@@ -424,7 +433,7 @@ public class ServerMain {
             }
         }
         List<ExecutionStep> executionDetails = new ArrayList<>();
-        int result = EngineManager.getInstance().runProgram(username, userVars, executionDetails);
+        int result = EngineManager.getInstance().runProgram(username, userVars, executionDetails, degree, isDebugMode);
         return switch (result) {
             case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not found");
             case ERROR_CODES.ERROR_PROGRAM_NOT_FOUND -> new BaseResponse(false, "No program set for user");

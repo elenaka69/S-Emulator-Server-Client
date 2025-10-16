@@ -11,6 +11,7 @@ import server.engine.impl.api.skeleton.functionArgs.FunctionArgument;
 import server.engine.impl.api.skeleton.functionArgs.VariableArgument;
 import server.engine.label.*;
 import server.engine.program.FunctionExecutor;
+import server.engine.program.FunctionExecutorImpl;
 import server.engine.program.SprogramImpl;
 import server.engine.variable.VariableImpl;
 import server.engine.variable.VariableType;
@@ -288,6 +289,7 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
             op.setParent(parent);
             ops.add(op);
         });
+        ((FunctionExecutorImpl)functionClone).updateFunctionOps();
         function = functionClone;
         historyFunctions.add(functionClone);
 

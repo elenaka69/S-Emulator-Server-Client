@@ -33,7 +33,7 @@ public class OPQuote extends OpFunctionBase {
 
     public OPQuote(OPQuote src)
     {
-        super(OpData.QUOTE, src.getVariable(), src.getLabel(), src.getFunctionName(), src.getStrFunctionArguments(), null);
+        super(OpData.QUOTE, src.getVariable().myClone(), src.getLabel().myClone(), src.getFunctionName(), src.getStrFunctionArguments(), null);
         generateUniqId();
     }
 
@@ -45,6 +45,9 @@ public class OPQuote extends OpFunctionBase {
     @Override
     public Label execute(FunctionExecutor program, List <FunctionExecutor> functions) {
 
+        if (function == null) {
+            System.out.println("NULL");
+        }
         ((FunctionExecutorImpl)function).run(program, functionArguments, functions);
         Long result = function.getVariableValue(VariableImpl.RESULT);
         ArrayList<VariableImpl> vars = new ArrayList<>();

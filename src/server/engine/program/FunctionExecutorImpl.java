@@ -1,6 +1,8 @@
 package server.engine.program;
 
 
+import server.auth.UserProfile;
+import server.engine.execution.ERROR_CODES;
 import server.engine.execution.ExecutionContext;
 import server.engine.execution.ExecutionContextImpl;
 import server.engine.impl.api.skeleton.AbstractOpBasic;
@@ -13,7 +15,8 @@ import server.engine.label.*;
 import server.engine.variable.VariableImpl;
 
 import java.util.*;
-import javafx.util.Pair;
+
+import shared.ExecutionStep;
 
 public class FunctionExecutorImpl implements FunctionExecutor {
 
@@ -56,7 +59,7 @@ public class FunctionExecutorImpl implements FunctionExecutor {
     }
     public int getAverageCost() { return averageCost; }
     public void setAverageCost(int averageCost) { this.averageCost = averageCost; }
-
+    @Override
     public String getUserString() { return userString; }
 
     public void setUserString(String userString) { this.userString = userString; }
@@ -257,7 +260,7 @@ public class FunctionExecutorImpl implements FunctionExecutor {
         }
     }
 
-    protected  void updateFunctionOps() {
+    public void updateFunctionOps() {
         for (AbstractOpBasic op : opList) {
             if (op instanceof OpFunctionBase) {
                 String funName = ((OpFunctionBase) op).getFunctionName();
@@ -281,8 +284,9 @@ public class FunctionExecutorImpl implements FunctionExecutor {
         }
         newFunc.setInputVars(new ArrayList<>(this.inputVars));
         newFunc.setAllVars(new HashSet<>(this.variables));
-        newFunc.setContext(context);
         newFunc.addLabelSet(new LinkedHashSet<>(this.labelsHashSet));
+        newFunc.setContext(context);
+        newFunc.updateLabels();
         newFunc.setUserString(this.userString);
         newFunc.origVariables = new HashSet<>(this.origVariables);
         newFunc.cost = this.cost;
@@ -349,7 +353,7 @@ public class FunctionExecutorImpl implements FunctionExecutor {
             }
         }
         opList = expandedList;
-        updateLabelsAfterCollapse();
+        updateLabels();
         updateVariables();
     }
 
@@ -376,7 +380,7 @@ public class FunctionExecutorImpl implements FunctionExecutor {
         }
 
         opList = expandedList;
-        updateLabelsAfterCollapse();
+        updateLabels();
         updateVariables();
     }
 
@@ -391,7 +395,7 @@ public class FunctionExecutorImpl implements FunctionExecutor {
         }
     }
 
-    private void updateLabelsAfterCollapse() {
+    protected void updateLabels() {
         // Rebuild the label map in the context
         context.getLabelMap().clear();
         for (AbstractOpBasic op : opList) {
@@ -401,28 +405,63 @@ public class FunctionExecutorImpl implements FunctionExecutor {
         }
     }
 
-    @Override
-    public List<Pair<Integer, TreeMap<VariableImpl, Long>>> run(List<Long> inputs, List <FunctionExecutor> functions) {
-        List<Pair<Integer, TreeMap<VariableImpl, Long>>> listOfRunSteps = new ArrayList<>();
-        TreeMap<VariableImpl, Long> runMap = new TreeMap<>(Comparator.comparing(VariableImpl::getRepresentation));
+    private void addExecutionStep(int step, List<ExecutionStep> executionDetails, int stepCost) {
+        Map<String, Long> varMap = new LinkedHashMap<>();
+        for (Map.Entry<VariableImpl, Long> entry : getCurrSnap().entrySet()) {
+            varMap.put(entry.getKey().getRepresentation(), entry.getValue());  // assuming VariableImpl has getName()
+        }
+        executionDetails.add(new ExecutionStep(step, varMap, stepCost));
+    }
 
-        reset();
+    @Override
+    public int  run(List<Long> inputs, List <FunctionExecutor> functions, List<ExecutionStep> executionDetails, UserProfile owner, boolean isDebugMode) throws IllegalArgumentException{
+
+        boolean isMainProgram = (executionDetails != null);
+
+        if (isMainProgram)
+            reset();
+        else { // we don't clean the cycles if we are in a function
+            this.opListIndex = 0;
+            context.reset();
+        }
+
         resetSnap();
         createFirstSnap(inputs);  // enter the vals from the user to the input vars
         AbstractOpBasic current = getNextOp();
 
-        // put init state
-        runMap.putAll(getCurrSnap());
-        listOfRunSteps.add(new Pair<>(getOpsIndex()-1, runMap));
+        if (isMainProgram)
+            addExecutionStep(getOpsIndex()-1, executionDetails, 0);
+
+        int stepCost;
 
         while (current != null) {
+            stepCost = 0;
             Label next;
-            if (current instanceof OpFunctionBase)
-                next = ((OpFunctionBase)current).execute(this, functions);
+            if (current instanceof OpFunctionBase) {
+                if (isMainProgram) {
+                    for (FunctionExecutor func : functions) {
+                        ((FunctionExecutorImpl) func).cycles = 0;
+                    }
+                }
+                next = ((OpFunctionBase) current).execute(this, functions);
+                if (isMainProgram) {
+                    for (FunctionExecutor func : functions) {
+                        stepCost += ((FunctionExecutorImpl) func).cycles;
+                    }
+                }
+            }
             else
                 next = current.execute(this);
 
+            stepCost += current.getCycles();
+            if (isMainProgram && !isDebugMode) {
+                owner.deductCredit(stepCost);
+            }
+
             if (next.equals(FixedLabel.EXIT)) {
+                if (executionDetails != null) {
+                    addExecutionStep(getOpsIndex() - 1, executionDetails, stepCost);
+                }
                 break;
             } else if (next.equals( FixedLabel.EMPTY )) {
                 current = getNextOp();
@@ -435,11 +474,19 @@ public class FunctionExecutorImpl implements FunctionExecutor {
                 ChangeOpIndex(target);
                 current = target;
             }
-            runMap = new TreeMap<>(Comparator.comparing(VariableImpl::getRepresentation));
-            runMap.putAll(getCurrSnap());
-            listOfRunSteps.add(new Pair<>(getOpsIndex()-1, runMap));
+
+            if (isMainProgram) {
+                addExecutionStep(getOpsIndex() - 1, executionDetails, stepCost);
+            }
         }
-        return listOfRunSteps;
+        if( isMainProgram) {
+            // count the cycles only in the main program
+            int cycles  = 0;
+            for (ExecutionStep step : executionDetails)
+                cycles += step.getStepCost();
+            this.cycles = cycles;
+        }
+        return ERROR_CODES.ERROR_OK;
     }
 
     public Long  run(FunctionExecutor program, List<AbstractArgument> functionArguments, List <FunctionExecutor> functions) throws IllegalArgumentException
@@ -469,7 +516,7 @@ public class FunctionExecutorImpl implements FunctionExecutor {
             });
         }
 
-        run(funcVars, functions);
+        run(funcVars, functions, null, null, false);
 
         return getVariableValue(VariableImpl.RESULT);
     }

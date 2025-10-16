@@ -2,6 +2,7 @@ package server.engine.program;
 
 import server.engine.execution.ProgramCollection;
 import server.engine.impl.api.skeleton.AbstractOpBasic;
+import server.engine.label.Label;
 
 import java.util.*;
 
@@ -28,9 +29,11 @@ public class SprogramImpl extends FunctionExecutorImpl {
         this.maxDegree = other.maxDegree;
         this.inputVars = other.inputVars != null ? new ArrayList<>(other.inputVars) : null;
         setContext(other.context);
+        updateLabels();
         this.variables = other.variables != null ? new HashSet<>(other.variables) : null;
         this.origVariables = other.origVariables != null ? new HashSet<>(other.origVariables) : null;
         this.labelsHashSet = other.labelsHashSet != null ? new LinkedHashSet<>(other.labelsHashSet) : null;
+        this.setUserString(other.getUserString());
         functions = null;
     }
 
@@ -127,13 +130,14 @@ public class SprogramImpl extends FunctionExecutorImpl {
         }
         newProgram.setInputVars(new ArrayList<>(this.inputVars));
         newProgram.setAllVars(new HashSet<>(this.variables));
-        newProgram.setContext(context);
         newProgram.addLabelSet(new LinkedHashSet<>(this.labelsHashSet));
         newProgram.origVariables = new HashSet<>(this.origVariables);
         newProgram.cost = this.cost;
         newProgram.maxDegree = this.maxDegree;
         newProgram.setFunctions(this.funcNameList);
         newProgram.averageCost = this.averageCost;
+        newProgram.setContext(context);
+        newProgram.updateLabels();
 
         if (functions != null) {
             functions.forEach(func->{
@@ -169,4 +173,3 @@ public class SprogramImpl extends FunctionExecutorImpl {
         functions.forEach(FunctionExecutor::resetSnap);
     }
 }
-

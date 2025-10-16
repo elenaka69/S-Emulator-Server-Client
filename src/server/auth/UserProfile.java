@@ -1,9 +1,7 @@
 package server.auth;
 
-import javafx.util.Pair;
 import server.engine.execution.ERROR_CODES;
 import server.engine.execution.ProgramCollection;
-import server.engine.execution.ProgramExecutorImpl;
 import server.engine.impl.api.skeleton.AbstractOpBasic;
 import server.engine.impl.api.synthetic.OpFunctionBase;
 import server.engine.label.Label;
@@ -59,11 +57,14 @@ public class UserProfile {
 
     public int getTotalSpentCredits() { return spentCredit.get(); }
 
-    public void deductCredit(int amount) {
+    public int deductCredit(int amount) {
         if (amount > 0) {
+            if (amount > credit.get())
+                return ERROR_CODES.ERROR_NOT_ENOUGH_CREDIT;
             credit.addAndGet(-amount);
             spentCredit.addAndGet(amount);
         }
+        return ERROR_CODES.ERROR_OK;
     }
 
     public String getUsername() { return username; }
@@ -160,19 +161,37 @@ public class UserProfile {
         return ERROR_CODES.ERROR_FUNCTION_NOT_FOUND;
     }
 
-    public int executeProgram(List<Long> userVars, List<ExecutionStep> executionDetails) {
+    private void addExecStatistic(List<ExecutionStep> executionDetails, int degree) {
 
-        List<Pair<Integer, TreeMap<VariableImpl, Long>>> execResult =
-                ProgramExecutorImpl.run(workingFunction, userVars, chosenMainProgram.getFunctions());
-
-        for (Pair<Integer, TreeMap<VariableImpl, Long>> pair : execResult) {
-            Map<String, Long> varMap = new LinkedHashMap<>();
-            for (Map.Entry<VariableImpl, Long> entry : pair.getValue().entrySet()) {
-                varMap.put(entry.getKey().getRepresentation(), entry.getValue());  // assuming VariableImpl has getName()
-            }
-            executionDetails.add(new ExecutionStep(pair.getKey(), varMap));
+        String type = workingFunction.getUserString() == null ? "program" : "function";
+        String name = workingFunction.getUserString() == null ? workingFunction.getName() : workingFunction.getUserString();
+        String arch;
+        switch (workingFunction.getCost()) {
+            case 5: arch = "I"; break;
+            case 100: arch = "II"; break;
+            case 500: arch = "III"; break;
+            case 1000: arch = "IV"; break;
+            default: arch = "Unknown"; break;
         }
-        return ERROR_CODES.ERROR_OK;
+
+        long result = workingFunction.getVariableValue(VariableImpl.RESULT);
+
+        executions.add(new ExecStatistic(type, name, arch, degree, (int) result, workingFunction.getCycles()));
+    }
+
+    public int executeProgram(List<Long> userVars, List<ExecutionStep> executionDetails, int degree, Boolean isDebugMode) {
+
+        if (workingFunction == null)
+            return ERROR_CODES.ERROR_FUNCTION_NOT_FOUND;
+
+        if (deductCredit(workingFunction.getCost()) != ERROR_CODES.ERROR_OK)
+            return ERROR_CODES.ERROR_NOT_ENOUGH_CREDIT;
+
+        int result =  workingFunction.run(userVars, chosenMainProgram.getFunctions(), executionDetails, this,  isDebugMode);
+
+        addExecStatistic(executionDetails, degree);
+
+        return result;
     }
 
     public int getRunStatistics(List<Long> runStatistics) {

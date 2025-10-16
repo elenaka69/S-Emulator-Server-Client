@@ -343,8 +343,9 @@ public class ExecutionController {
             if (success) {
                 setDebuggingMode(true);
                 stepOverRoutine();
+                updateUserCredits();
             }
-        });
+        }, true);
     }
 
     public void onRun(ActionEvent actionEvent) {
@@ -353,6 +354,24 @@ public class ExecutionController {
                 populateDebugTable(runListMap.size() - 1);
                 setDebuggingMode(false);
                 setStatistics();
+                updateUserCredits();
+            }
+        }, false);
+    }
+
+    private void updateUserCredits() {
+        BaseRequest req = new BaseRequest("getCredits").add("username", clientUsername);
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            if (response.ok) {
+                Object val = response.data.get("credits");
+                if (val != null) {
+                    Platform.runLater(() -> creditsField.setText(String.valueOf(val)));
+                } else {
+                    Platform.runLater(() -> showStatus("No credits field in response", Alert.AlertType.WARNING));
+                }
+            } else {
+                Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
             }
         });
     }
@@ -384,13 +403,15 @@ public class ExecutionController {
         }
     }
 
-    private void runRoutine(Consumer<Boolean> callback)
+    private void runRoutine(Consumer<Boolean> callback, boolean isDebugMode)
     {
         if (checkAndConfirmParams()) {
             List<Long> userVars = getUserVars();
+            int curDegree = Integer.parseInt(expandField.getText().trim());
             BaseRequest req = new BaseRequest("runProgram")
                     .add("username", clientUsername)
-                    .add("inputVariables", userVars);
+                    .add("inputVariables", userVars).add("isDebugMode", isDebugMode)
+                    .add("degree", curDegree);
 
             sendRequest("http://localhost:8080/api", req, response -> {
                 boolean success = false;
@@ -859,6 +880,7 @@ public class ExecutionController {
                     loadHighlightComboBox();
                     loadInputVariables();
                     setRangeDegree(0);
+                    debugTable.getItems().clear();
                 });
             } else {
                 Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));

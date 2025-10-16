@@ -327,47 +327,12 @@ public class EngineManager {
         return ERROR_CODES.ERROR_OK;
     }
 
-    public int runProgram(String username, List<Long> userVars, List<ExecutionStep> executionDetails) {
+    public int runProgram(String username, List<Long> userVars, List<ExecutionStep> executionDetails, int degree, Boolean isDebugMode) {
         UserProfile profile = UserManager.getActiveUsers().get(username);
         if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
 
-        int result = profile.executeProgram(userVars, executionDetails);
+        int result = profile.executeProgram(userVars, executionDetails, degree, isDebugMode);
         return result;
-
-/*
-        if (program == null) return ERROR_CODES.ERROR_PROGRAM_NOT_FOUND;
-      FunctionExecutor program = profile.getWorkProgram();
-
-        int cost = program.calculateCost(userVars);
-        synchronized (profile) {
-            if (profile.getCredit() < cost) {
-                return ERROR_CODES.ERROR_INSUFFICIENT_CREDITS;
-            }
-            profile.setCredit(profile.getCredit() - cost);
-            profile.addSpentCredits(cost);
-            profile.incrementExecutions();
-        }
-
-        List<FunctionExecutor> functions = new ArrayList<>();
-        for (String funcName : program.getFuncNameList()) {
-            FunctionExecutor func = ProgramCollection.getFunction(funcName);
-            if (func != null) {
-                functions.add(func);
-            }
-        }
-*/
-      /*  List<Pair<Integer, TreeMap<VariableImpl, Long>>> execResult = ProgramExecutorImpl.run(program, userVars, functions);
-        executionDetails.addAll(execResult);*/
-
-        // Log execution statistics
-    /*    ExecStatistic stat = new ExecStatistic("Program", profile.getMainProgramName(), program.getArchitecture(),
-                program.getProgramDegree(), "Success", program.getTotalCycles(), java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-        profile.addExecutionStat(stat);
-
-        // Update program execution stats
-        ProgramCollection.updateProgramStats(profile.getMainProgramName(), program.getTotalCycles());
-
-        return ERROR_CODES.ERROR_OK;*/
     }
 
     public int getRunStatistics(String username, List<Long> runStatistics) {
