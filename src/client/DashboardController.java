@@ -7,33 +7,39 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.animation.*;
 import shared.BaseRequest;
 import shared.BaseResponse;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static java.lang.Thread.sleep;
+
 
 public class DashboardController {
 
-    private static final int REFRESH_INTERVAL = 30; // seconds
+    private static final int REFRESH_INTERVAL = 1; // seconds
     private final HttpService http = new HttpService(); // your async HTTP helper
     private final ObjectMapper mapper = new ObjectMapper();
+
 
     private ScheduledExecutorService scheduler;
 
@@ -43,6 +49,7 @@ public class DashboardController {
     @FXML private TextField chargeAmountField;
     @FXML private ProgressBar progressBar;
     @FXML private TextField filePathField;
+    @FXML public HBox mainContentBox;
     @FXML public TableView<ConnectedUsersRow> connectedUsersTable;
     @FXML public TableColumn<ConnectedUsersRow, Integer> colNumber;
     @FXML public TableColumn<ConnectedUsersRow, String> colUsername;
@@ -77,7 +84,16 @@ public class DashboardController {
     @FXML private TableColumn<FunctionsRow, Integer> colFuncNumInstr;
     @FXML private TableColumn<FunctionsRow, Integer> colFuncMaxCost;
 
+    @FXML public Button chatButton;
+    @FXML private TitledPane chatPane;
+    @FXML private VBox chatBox;
+    @FXML private ScrollPane chatScrollPane;
+    @FXML private TextField chatInput;
+
     private String clientUsername;
+    private final Map<String, String> userColors = new HashMap<>();
+    private final Random random = new Random();
+
     private String selectedUser;
     private String selectedProgram = null;
     private int selectedProgramCost = 0;
@@ -340,6 +356,44 @@ public class DashboardController {
         }
     }
 
+    public void onSendMessage(ActionEvent actionEvent) {
+        String message = chatInput.getText().trim();
+        if (message.isEmpty()) {
+            return;
+        }
+
+        BaseRequest req = new BaseRequest("sendMessage")
+                .add("username", clientUsername)
+                .add("message", message);
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            if (response.ok) {
+                Platform.runLater(() -> {
+                     addMessage(clientUsername, message, "now");
+                    chatInput.clear();
+                });
+            } else {
+                Platform.runLater(() -> showStatus("Failed to send message: " + response.message, Alert.AlertType.ERROR));
+            }
+        });
+    }
+
+    public void onToggleChat(ActionEvent actionEvent) {
+        boolean isVisible = chatPane.isVisible();
+        Stage stage = (Stage) mainContentBox.getScene().getWindow();
+        if (isVisible) {
+            chatButton.setText("Chat");
+            stage.setWidth(stage.getWidth() - 400);
+        }
+        else {
+            chatButton.setText("Hide Chat");
+            stage.setWidth(stage.getWidth() + 400);
+        }
+
+        chatPane.setVisible(!isVisible);
+        chatPane.setManaged(!isVisible);
+    }
+
     public static class ConnectedUsersRow {
         private final Integer number;
         private final String userName;
@@ -492,6 +546,8 @@ public class DashboardController {
             loadConnectedUsers();
             loadProgramsTable();
             loadFunctionsTable();
+            if (chatPane.isVisible())
+                loadChatMessages();
         }, 0, REFRESH_INTERVAL, TimeUnit.SECONDS);
     }
 
@@ -698,6 +754,87 @@ public class DashboardController {
                 loadConnectedUsers();
             });
         });
+    }
+
+    private void loadChatMessages() {
+        BaseRequest req = new BaseRequest("getMessages");
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            if (!response.ok) {
+                Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+                return;
+            }
+
+            Platform.runLater(() -> {
+                List<Map<String, Object>> messages = mapper.convertValue(
+                        response.data.get("messages"),
+                        mapper.getTypeFactory().constructCollectionType(List.class, Map.class)
+                );
+
+                displayMessages(messages);
+            });
+        });
+    }
+
+    private void displayMessages(List<Map<String, Object>> messages) {
+        chatBox.getChildren().clear();
+
+        for (Map<String, Object> msg : messages) {
+            String username = (String) msg.get("username");
+            String message = (String) msg.get("message");
+            String timestamp = (String) msg.get("timestamp");
+            addMessage(username, message, timestamp);
+        }
+
+        // scroll to bottom
+        Platform.runLater(() -> chatScrollPane.setVvalue(1.0));
+    }
+
+    public void addMessage(String username, String message, String timestamp) {
+        boolean isMine = username.equals(clientUsername);
+
+        HBox messageContainer = new HBox();
+        messageContainer.setAlignment(isMine ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+
+        Label msgLabel = new Label(message);
+        msgLabel.setWrapText(true);
+        msgLabel.setMaxWidth(250);
+        msgLabel.setPadding(new Insets(5, 10, 5, 10));
+        msgLabel.setStyle(
+                "-fx-background-color: " + (isMine ? "#C8E6C9" : "#FFFFFF") + ";" +
+                        "-fx-background-radius: 10;" +
+                        "-fx-border-radius: 10;"
+        );
+
+        VBox vbox = new VBox();
+        vbox.setSpacing(2);
+        vbox.setAlignment(isMine ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+
+        if (!isMine) {
+            Label userLabel = new Label(username);
+            userLabel.setStyle("-fx-background-color: " + getColorForUser(username) +
+                    "; -fx-text-fill: white; -fx-padding: 2 6 2 6; -fx-background-radius: 8;");
+            userLabel.setFont(Font.font("System", FontWeight.BOLD, 11));
+            vbox.getChildren().add(userLabel);
+        }
+
+        vbox.getChildren().add(msgLabel);
+        messageContainer.getChildren().add(vbox);
+        chatBox.getChildren().add(messageContainer);
+
+        // scroll to bottom after adding message
+        Platform.runLater(() -> chatScrollPane.setVvalue(1.0));
+    }
+
+    private String getColorForUser(String username) {
+        if (userColors.containsKey(username))
+            return userColors.get(username);
+
+        // random pleasant color for each user
+        String[] colors = {"#2196F3", "#9C27B0", "#FF9800", "#4CAF50", "#E91E63", "#3F51B5"};
+        String color = colors[random.nextInt(colors.length)];
+        userColors.put(username, color);
+        return color;
     }
 
     private void sendRequest(String url, BaseRequest req, Consumer<BaseResponse> onSuccess) {

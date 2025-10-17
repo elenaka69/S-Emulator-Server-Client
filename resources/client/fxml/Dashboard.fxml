@@ -11,9 +11,9 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.TextArea?>
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="client.DashboardController"
-            prefWidth="950" prefHeight="900"
             stylesheets="@/client/css/style.css"
             styleClass="root">
 
@@ -43,8 +43,8 @@
             </HBox>
             <HBox alignment="CENTER_LEFT" style="-fx-padding: 0 0 0 0;">
                 <ProgressBar fx:id="progressBar" prefHeight="20" prefWidth="465" progress="0.0" style="-fx-padding: 0 0 0 10;"/>
-            <!--        <Region HBox.hgrow="ALWAYS"/>
-                    <Button text="Logout" onAction="#onLogout"/>-->
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="chatButton" text="Chat" onAction="#onToggleChat"/>
                 </HBox>
             </VBox>
         </top>
@@ -55,9 +55,10 @@
                 <content>
                     <VBox spacing="10" alignment="TOP_CENTER">
                     <!-- Users / Programs modules side-by-side -->
-                <HBox spacing="10" alignment="TOP_LEFT" style="-fx-padding: 0 0 0 20;">
+                    <HBox fx:id="mainContentBox" spacing="10" alignment="TOP_LEFT"
+                              style="-fx-padding: 0 0 0 20;" HBox.hgrow="ALWAYS">
                 <!-- Users Module -->
-                    <TitledPane text="Users" collapsible="false" prefWidth="550" >
+                    <TitledPane text="Users" collapsible="false" HBox.hgrow="ALWAYS" >
                         <VBox spacing="10" alignment="TOP_CENTER" fillWidth="true" style="-fx-padding: 10;">
 
                             <!-- Connected Users Table -->
@@ -135,6 +136,19 @@
                                     </columns>
                                 </TableView>
                             </VBox>
+                        </VBox>
+                    </TitledPane>
+                    <TitledPane fx:id="chatPane" text="Chat" collapsible="false" prefWidth="400" visible="false" managed="false">
+                        <VBox spacing="10" alignment="TOP_CENTER" fillWidth="true" style="-fx-padding: 10;">
+                            <ScrollPane fx:id="chatScrollPane" fitToWidth="true" prefHeight="300" prefWidth="400">
+                                <content>
+                                    <VBox fx:id="chatBox" spacing="5" alignment="TOP_CENTER" style="-fx-padding: 10;"/>
+                                </content>
+                            </ScrollPane>
+                            <HBox spacing="5">
+                                <TextField fx:id="chatInput" promptText="Type your message..." HBox.hgrow="ALWAYS"/>
+                                <Button text="Send" onAction="#onSendMessage"/>
+                            </HBox>
                         </VBox>
                     </TitledPane>
                 </HBox>

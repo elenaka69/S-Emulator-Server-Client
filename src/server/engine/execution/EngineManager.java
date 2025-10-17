@@ -1,5 +1,6 @@
 package server.engine.execution;
 
+import server.auth.ChatCollection;
 import server.auth.ExecStatistic;
 import server.auth.UserManager;
 import server.auth.UserProfile;
@@ -353,5 +354,25 @@ public class EngineManager {
             return profile.getCredit();
         }
         return result;
+    }
+
+    public int sendMessage(String username, String message) {
+        UserProfile profile = UserManager.getActiveUsers().get(username);
+        if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
+
+        ChatCollection.addMessage(username, message);
+        return ERROR_CODES.ERROR_OK;
+    }
+
+    public int fetchMessages(List<Map<String, Object>> messagesList) {
+        List<ChatCollection.ChatMessage> messages = ChatCollection.getAllMessages();
+        for (ChatCollection.ChatMessage msg : messages) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("username", msg.getUsername());
+            row.put("message", msg.getMessage());
+            row.put("timestamp", msg.getTimestamp().toString());
+            messagesList.add(row);
+        }
+        return ERROR_CODES.ERROR_OK;
     }
 }

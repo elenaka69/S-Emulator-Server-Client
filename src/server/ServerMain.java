@@ -55,6 +55,8 @@ public class ServerMain {
                 case "ping" -> new BaseResponse(true, "pong");
                 case "getPrograms" -> handlePrograms(req);
                 case "getFunctions" -> handleFunctions(req);
+                case "sendMessage" -> handleSendMessage(req);
+                case "getMessages" -> handleGendMessage(req);
                 /* Execution Page */
                 case "setProgramToUser" -> handleExecuteProgram(req);
                 case "getProgramInstructions" -> handleGetInstructions(req);
@@ -240,7 +242,36 @@ public class ServerMain {
         return new BaseResponse(true, "Functions fetched successfully").add("functions", functionsList);
     }
 
-    private static BaseResponse handleExecuteProgram(BaseRequest req) {
+    private static BaseResponse handleSendMessage(BaseRequest req) {
+        String username = getString(req, "username");
+        String message = getString(req, "message");
+
+        if (!validateParameter(username)) {
+            return new BaseResponse(false, "Invalid username");
+        }
+
+        if (!validateParameter(message)) {
+            return new BaseResponse(false, "Invalid message");
+        }
+
+        int result = EngineManager.getInstance().sendMessage(username, message);
+        return switch (result) {
+            case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not logged in");
+            case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Message sent successfully");
+            default -> new BaseResponse(false, "Failed to send message");
+        };
+    }
+
+    private static BaseResponse handleGendMessage(BaseRequest req) {
+        List<Map<String, Object>> messagesList = new ArrayList<>();
+        int result = EngineManager.getInstance().fetchMessages(messagesList);
+        if (result != ERROR_CODES.ERROR_OK)
+            return new BaseResponse(false, "Failed to fetch messages");
+
+        return new BaseResponse(true, "Messages fetched successfully").add("messages", messagesList);
+    }
+
+        private static BaseResponse handleExecuteProgram(BaseRequest req) {
         String username = getString(req, "username");
         String programName = getString(req, "programName");
         Boolean isProgram = getBoolean(req, "isProgram");
