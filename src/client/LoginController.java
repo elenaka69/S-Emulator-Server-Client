@@ -68,7 +68,7 @@ public class LoginController {
 
             // Pass the username to dashboard controller
             DashboardController controller = loader.getController();
-            controller.startDashBoard(username);
+            controller.startDashBoard(username, false);
 
             Stage stage = (Stage) usernameField.getScene().getWindow(); // reuse same stage
             stage.setScene(new Scene(root));

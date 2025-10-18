@@ -45,7 +45,7 @@
                 <ProgressBar fx:id="progressBar" prefHeight="20" prefWidth="465" progress="0.0" style="-fx-padding: 0 0 0 10;"/>
                     <Region HBox.hgrow="ALWAYS"/>
                     <Button fx:id="chatButton" text="Chat" onAction="#onToggleChat"/>
-                </HBox>
+            </HBox>
             </VBox>
         </top>
 
@@ -55,7 +55,7 @@
                 <content>
                     <VBox spacing="10" alignment="TOP_CENTER">
                     <!-- Users / Programs modules side-by-side -->
-                    <HBox fx:id="mainContentBox" spacing="10" alignment="TOP_LEFT"
+                    <HBox fx:id="dashboardMainContentBox" spacing="10" alignment="TOP_LEFT"
                               style="-fx-padding: 0 0 0 20;" HBox.hgrow="ALWAYS">
                 <!-- Users Module -->
                     <TitledPane text="Users" collapsible="false" HBox.hgrow="ALWAYS" >

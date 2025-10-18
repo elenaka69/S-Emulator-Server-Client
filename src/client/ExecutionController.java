@@ -22,13 +22,18 @@ import shared.BaseResponse;
 import shared.ExecutionStep;
 
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 public class ExecutionController {
+    private static final int REFRESH_INTERVAL = 1;
     private final HttpService http = new HttpService(); // your async HTTP helper
     private final ObjectMapper mapper = new ObjectMapper();
+    private ScheduledExecutorService scheduler;
     
     @FXML public Label usernameField;
     @FXML public TextField creditsField;
@@ -37,7 +42,7 @@ public class ExecutionController {
     @FXML public HBox runButtonsBox;
     @FXML public VBox runBox;
     private VBox paramBox;
-
+    @FXML public HBox executionMainContentBox;
     @FXML private Label expandLabel;
     @FXML private TextField expandField;
     @FXML private Button expandButton;
@@ -75,6 +80,12 @@ public class ExecutionController {
     @FXML private TableColumn<ProgramHistoryRow, Integer> colHistoryRunResult;
     @FXML private TableColumn<ProgramHistoryRow, Integer> colHistoryRunCycle;
 
+    @FXML public Button chatButton;
+    @FXML private TitledPane chatPane;
+    @FXML private VBox chatBox;
+    @FXML private ScrollPane chatScrollPane;
+    @FXML private TextField chatInput;
+
     private final List<TextField> paramFields = new ArrayList<>();
     private List<String> inputVariables = new ArrayList<>();
     private List<ExecutionStep> runListMap;
@@ -87,6 +98,7 @@ public class ExecutionController {
     private int maxDegree;
     private int runHistoryCounter = 0;
     private final ObservableList<ProgramHistoryRow> historyRunData = FXCollections.observableArrayList();
+    private ChatUIHelper chatHelper;
 
     public void initialize() {
         setupProgramTable();
@@ -120,9 +132,13 @@ public class ExecutionController {
                 });
             }
         });
+        startScheduler();
     }
 
     private void onClose() {
+        if (scheduler != null) {
+            scheduler.shutdownNow(); // Stop updates when window closes
+        }
         shutdown();
     }
 
@@ -136,13 +152,88 @@ public class ExecutionController {
         });
     }
 
-    public void startExecutionBoard(String clientUsername, String programName, boolean isProgram, int credits) {
+    private void startScheduler() {
+        scheduler = Executors.newSingleThreadScheduledExecutor();
+        scheduler.scheduleAtFixedRate(() -> {
+            if (chatPane.isVisible())
+                loadChatMessages();
+        }, 0, REFRESH_INTERVAL, TimeUnit.SECONDS);
+    }
+
+    public void startExecutionBoard(String clientUsername, String programName, boolean isProgram, int credits, boolean isChatVisible) {
         creditsField.setText(String.valueOf(credits));
         this.clientUsername = clientUsername;
         this.programName = programName;
         usernameField.setText(clientUsername);
+        chatHelper = new ChatUIHelper(chatBox, chatScrollPane, clientUsername);
+        Platform.runLater(() -> {
+            if (isChatVisible) {
+                chatPane.setVisible(true);
+                chatPane.setManaged(true);
+                chatButton.setText("Hide Chat");
+            }
+        });
+
         setProgramToUser(isProgram);
         showStatus("Loaded program: " + programName, Alert.AlertType.INFORMATION);
+    }
+
+    public void onSendMessage(ActionEvent actionEvent) {
+        String message = chatInput.getText().trim();
+        if (message.isEmpty()) {
+            return;
+        }
+
+        BaseRequest req = new BaseRequest("sendMessage")
+                .add("username", clientUsername)
+                .add("message", message);
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            if (response.ok) {
+                Platform.runLater(() -> {
+                    //  addMessage(clientUsername, message, "now");
+                    chatHelper.sendMyMessage(message);
+                    chatInput.clear();
+                });
+            } else {
+                Platform.runLater(() -> showStatus("Failed to send message: " + response.message, Alert.AlertType.ERROR));
+            }
+        });
+    }
+
+    private void loadChatMessages() {
+        BaseRequest req = new BaseRequest("getMessages");
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            if (!response.ok) {
+                Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+                return;
+            }
+
+            Platform.runLater(() -> {
+                List<Map<String, Object>> messages = mapper.convertValue(
+                        response.data.get("messages"),
+                        mapper.getTypeFactory().constructCollectionType(List.class, Map.class)
+                );
+                chatHelper.displayMessages(messages);
+            });
+        });
+    }
+
+    public void onToggleChat(ActionEvent actionEvent) {
+        boolean isVisible = chatPane.isVisible();
+        Stage stage = (Stage) executionMainContentBox.getScene().getWindow();
+        if (isVisible) {
+            chatButton.setText("Chat");
+            stage.setWidth(stage.getWidth() - 400);
+        }
+        else {
+            chatButton.setText("Hide Chat");
+            stage.setWidth(stage.getWidth() + 400);
+        }
+
+        chatPane.setVisible(!isVisible);
+        chatPane.setManaged(!isVisible);
     }
 
     public static class WatchDebugRow {
@@ -550,7 +641,7 @@ public class ExecutionController {
             Parent root = loader.load();
 
             DashboardController controller = loader.getController();
-            controller.startDashBoard(clientUsername);
+            controller.startDashBoard(clientUsername, chatPane.isVisible());
 
             Stage stage = (Stage) usernameField.getScene().getWindow(); // reuse same stage
             stage.setScene(new Scene(root));

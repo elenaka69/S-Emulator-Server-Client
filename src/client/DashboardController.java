@@ -7,16 +7,12 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.animation.*;
@@ -40,8 +36,8 @@ public class DashboardController {
     private final HttpService http = new HttpService(); // your async HTTP helper
     private final ObjectMapper mapper = new ObjectMapper();
 
-
     private ScheduledExecutorService scheduler;
+    private ChatUIHelper chatHelper;
 
     @FXML public Label usernameField;
     @FXML private Label statusBar;
@@ -49,7 +45,7 @@ public class DashboardController {
     @FXML private TextField chargeAmountField;
     @FXML private ProgressBar progressBar;
     @FXML private TextField filePathField;
-    @FXML public HBox mainContentBox;
+    @FXML public HBox dashboardMainContentBox;
     @FXML public TableView<ConnectedUsersRow> connectedUsersTable;
     @FXML public TableColumn<ConnectedUsersRow, Integer> colNumber;
     @FXML public TableColumn<ConnectedUsersRow, String> colUsername;
@@ -91,8 +87,6 @@ public class DashboardController {
     @FXML private TextField chatInput;
 
     private String clientUsername;
-    private final Map<String, String> userColors = new HashMap<>();
-    private final Random random = new Random();
 
     private String selectedUser;
     private String selectedProgram = null;
@@ -139,11 +133,6 @@ public class DashboardController {
                 selectedProgramCost = newSel.getMaxCost(); // TODO chane to average cost?
                 selectedProgram = newSel.getName();
                 Platform.runLater(() -> functionsTable.getSelectionModel().clearSelection());
-            } else {
-                if (typeProgramSelected == SELECT_FUNCTION) return;
-                selectedProgram = null;
-                selectedProgramCost = 0;
-                typeProgramSelected = SELECT_NONE;
             }
         });
 
@@ -153,25 +142,28 @@ public class DashboardController {
                 selectedProgramCost = 0; // TODO get function cost?
                 selectedProgram = newSel.getName();
                 Platform.runLater(() -> programsTable.getSelectionModel().clearSelection());
-            } else {
-                if (typeProgramSelected == SELECT_PROGRAM) return;
-                selectedProgram = null;
-                selectedProgramCost = 0;
-                typeProgramSelected = SELECT_NONE;
             }
         });
 
         startScheduler();
     }
 
-    public void startDashBoard(String username) {
+    public void startDashBoard(String username, boolean isChatVisible) {
         this.clientUsername = username;
         selectedUser = username;
         usernameField.setText(username);
+        chatHelper = new ChatUIHelper(chatBox, chatScrollPane, clientUsername);
         showStatus("Logged in as: " + username, Alert.AlertType.INFORMATION);
         loadUserCredits();
         loadConnectedUsers();
         loadUserStatistics();
+        Platform.runLater(() -> {
+            if (isChatVisible) {
+                chatPane.setVisible(true);
+                chatPane.setManaged(true);
+                chatButton.setText("Hide Chat");
+            }
+        });
     }
 
 
@@ -325,7 +317,7 @@ public class DashboardController {
 
             // Pass the username to dashboard controller
             ExecutionController controller = loader.getController();
-            controller.startExecutionBoard(clientUsername, selectedProgram, typeProgramSelected == SELECT_PROGRAM, Integer.parseInt(creditsField.getText()));
+            controller.startExecutionBoard(clientUsername, selectedProgram, typeProgramSelected == SELECT_PROGRAM, Integer.parseInt(creditsField.getText()), chatPane.isVisible());
 
             Stage stage = (Stage) usernameField.getScene().getWindow(); // reuse same stage
             stage.setScene(new Scene(root));
@@ -369,7 +361,8 @@ public class DashboardController {
         sendRequest("http://localhost:8080/api", req, response -> {
             if (response.ok) {
                 Platform.runLater(() -> {
-                     addMessage(clientUsername, message, "now");
+                   //  addMessage(clientUsername, message, "now");
+                    chatHelper.sendMyMessage(message);
                     chatInput.clear();
                 });
             } else {
@@ -380,7 +373,7 @@ public class DashboardController {
 
     public void onToggleChat(ActionEvent actionEvent) {
         boolean isVisible = chatPane.isVisible();
-        Stage stage = (Stage) mainContentBox.getScene().getWindow();
+        Stage stage = (Stage) dashboardMainContentBox.getScene().getWindow();
         if (isVisible) {
             chatButton.setText("Chat");
             stage.setWidth(stage.getWidth() - 400);
@@ -651,6 +644,16 @@ public class DashboardController {
                     }
 
                     connectedUsersTable.setItems(rows);
+
+                    if (selectedUser != null) {
+                        for (ConnectedUsersRow row : rows) {
+                            if (row.getUserName().equals(selectedUser)) {
+                                connectedUsersTable.getSelectionModel().select(row);
+                                break;
+                            }
+                        }
+                    }
+
                 } else {
                     Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
                 }
@@ -720,6 +723,15 @@ public class DashboardController {
                 }
 
                 programsTable.setItems(rows);
+                if (typeProgramSelected == SELECT_PROGRAM && selectedProgram != null) {
+                    for (ProgramsRow row : rows) {
+                        if (row.getName().equals(selectedProgram)) {
+                            programsTable.getSelectionModel().select(row);
+                            break;
+                        }
+                    }
+                }
+
                 loadConnectedUsers();
             });
         });
@@ -751,6 +763,15 @@ public class DashboardController {
                     ));
                 }
                 functionsTable.setItems(rows);
+                if (typeProgramSelected == SELECT_FUNCTION && selectedProgram != null) {
+                    for (FunctionsRow row : rows) {
+                        if (row.getName().equals(selectedProgram)) {
+                            functionsTable.getSelectionModel().select(row);
+                            break;
+                        }
+                    }
+                }
+
                 loadConnectedUsers();
             });
         });
@@ -770,71 +791,9 @@ public class DashboardController {
                         response.data.get("messages"),
                         mapper.getTypeFactory().constructCollectionType(List.class, Map.class)
                 );
-
-                displayMessages(messages);
+                chatHelper.displayMessages(messages);
             });
         });
-    }
-
-    private void displayMessages(List<Map<String, Object>> messages) {
-        chatBox.getChildren().clear();
-
-        for (Map<String, Object> msg : messages) {
-            String username = (String) msg.get("username");
-            String message = (String) msg.get("message");
-            String timestamp = (String) msg.get("timestamp");
-            addMessage(username, message, timestamp);
-        }
-
-        // scroll to bottom
-        Platform.runLater(() -> chatScrollPane.setVvalue(1.0));
-    }
-
-    public void addMessage(String username, String message, String timestamp) {
-        boolean isMine = username.equals(clientUsername);
-
-        HBox messageContainer = new HBox();
-        messageContainer.setAlignment(isMine ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
-
-        Label msgLabel = new Label(message);
-        msgLabel.setWrapText(true);
-        msgLabel.setMaxWidth(250);
-        msgLabel.setPadding(new Insets(5, 10, 5, 10));
-        msgLabel.setStyle(
-                "-fx-background-color: " + (isMine ? "#C8E6C9" : "#FFFFFF") + ";" +
-                        "-fx-background-radius: 10;" +
-                        "-fx-border-radius: 10;"
-        );
-
-        VBox vbox = new VBox();
-        vbox.setSpacing(2);
-        vbox.setAlignment(isMine ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
-
-        if (!isMine) {
-            Label userLabel = new Label(username);
-            userLabel.setStyle("-fx-background-color: " + getColorForUser(username) +
-                    "; -fx-text-fill: white; -fx-padding: 2 6 2 6; -fx-background-radius: 8;");
-            userLabel.setFont(Font.font("System", FontWeight.BOLD, 11));
-            vbox.getChildren().add(userLabel);
-        }
-
-        vbox.getChildren().add(msgLabel);
-        messageContainer.getChildren().add(vbox);
-        chatBox.getChildren().add(messageContainer);
-
-        // scroll to bottom after adding message
-        Platform.runLater(() -> chatScrollPane.setVvalue(1.0));
-    }
-
-    private String getColorForUser(String username) {
-        if (userColors.containsKey(username))
-            return userColors.get(username);
-
-        // random pleasant color for each user
-        String[] colors = {"#2196F3", "#9C27B0", "#FF9800", "#4CAF50", "#E91E63", "#3F51B5"};
-        String color = colors[random.nextInt(colors.length)];
-        userColors.put(username, color);
-        return color;
     }
 
     private void sendRequest(String url, BaseRequest req, Consumer<BaseResponse> onSuccess) {

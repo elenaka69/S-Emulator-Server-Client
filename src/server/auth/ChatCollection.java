@@ -1,6 +1,7 @@
 package server.auth;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -11,12 +12,14 @@ public class ChatCollection {
     public static class ChatMessage {
         private final String username;
         private final String message;
-        private final LocalDateTime timestamp;
+        private final String  timestamp;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         public ChatMessage(String username, String message) {
             this.username = username;
             this.message = message;
-            this.timestamp = LocalDateTime.now();
+            this.timestamp = LocalDateTime.now().format(formatter);
+
         }
 
         public String getUsername() {
@@ -27,7 +30,7 @@ public class ChatCollection {
             return message;
         }
 
-        public LocalDateTime getTimestamp() {
+        public String  getTimestamp() {
             return timestamp;
         }
 

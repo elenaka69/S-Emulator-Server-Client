@@ -370,7 +370,7 @@ public class EngineManager {
             Map<String, Object> row = new HashMap<>();
             row.put("username", msg.getUsername());
             row.put("message", msg.getMessage());
-            row.put("timestamp", msg.getTimestamp().toString());
+            row.put("timestamp", msg.getTimestamp());
             messagesList.add(row);
         }
         return ERROR_CODES.ERROR_OK;
