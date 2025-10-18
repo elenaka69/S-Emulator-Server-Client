@@ -74,4 +74,11 @@ public class ProgramCollection {
     public static Map<String, FunctionProperty> getFunctions() {
         return functions;
     }
+
+    public static void incrementProgramExecs(String programName) {
+        ProgramProperty prop = programs.get(programName);
+        if (prop != null ) {
+            prop.incrementExecs();
+        }
+    }
 }

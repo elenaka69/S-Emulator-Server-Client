@@ -258,6 +258,18 @@ public class EngineManager {
         return ERROR_CODES.ERROR_OK;
     }
 
+    public void incrementProgramExecs(String programName) {
+        ProgramCollection.incrementProgramExecs(programName);
+    }
+
+    public void caclulateAvarageCost(SprogramImpl program) {
+
+        SprogramImpl clone = (SprogramImpl) program.myClone();
+        clone.updateFunctions();
+        clone.calculateAverageCost();
+        program.setAverageCost(clone.getAverageCost());
+    }
+
     public int fetchFunctions(List<Map<String, Object>> functionsList) {
         Map<String, FunctionProperty> functions = ProgramCollection.getFunctions();
         int num = 1;
@@ -332,6 +344,7 @@ public class EngineManager {
         UserProfile profile = UserManager.getActiveUsers().get(username);
         if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
 
+        incrementProgramExecs(profile.getMainProgramName());
         int result = profile.executeProgram(userVars, executionDetails, degree, isDebugMode);
         return result;
     }

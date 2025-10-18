@@ -1,8 +1,6 @@
 package server.engine.execution;
 
 import server.engine.program.FunctionExecutor;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ProgramProperty {
@@ -32,5 +30,5 @@ public class ProgramProperty {
     public int getNumExecs() { return numExecs.get(); }
     public int getAverageCost() { return averageCost.get(); }
     public FunctionExecutor getExecutor() { return executor; }
-    public void incrementNumExecs() { numExecs.incrementAndGet();}
+    public void incrementExecs() { numExecs.incrementAndGet();}
 }

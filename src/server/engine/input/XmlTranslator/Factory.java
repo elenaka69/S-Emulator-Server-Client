@@ -4,6 +4,7 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 
+import server.engine.execution.EngineManager;
 import server.engine.execution.ProgramCollection;
 import server.engine.impl.api.basic.*;
 import server.engine.impl.api.skeleton.AbstractOpBasic;
@@ -108,6 +109,7 @@ public class Factory
 
         ((SprogramImpl)program).setFunctions(functions);
         ((SprogramImpl) program).calculateCost();
+        EngineManager.getInstance().caclulateAvarageCost((SprogramImpl) program);
         ProgramCollection.registerProgram(username, fileName, program);
         return ERROR_CODES.ERROR_OK;
     }

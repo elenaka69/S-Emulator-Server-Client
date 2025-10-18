@@ -70,26 +70,38 @@ public class SprogramImpl extends FunctionExecutorImpl {
             });
         }
         updateOps();
+
     }
     private void updateOps()
     {
         if (functions == null)
             return;
         updateFunctionOps();
+
         functions.forEach(func->{
             ((FunctionExecutorImpl)func).updateFunctionOps();
         });
     }
 
-    @Override
-    public int getCycles() {
-
-        if (functions != null) {
-            functions.forEach(func->{
-                cycles += func.getCycles();
-            });
+    public void calculateAverageCost()
+    {
+        double totalCost = 0.0;
+        int NUM_TESTS = 3;
+        int nInputs = inputVars.size();
+        List<Long> userVars = new ArrayList<>();
+        for (int i = 0; i < NUM_TESTS; i++) {
+            userVars.clear();
+            for (int j = 0; j < nInputs; j++) {
+                long val = (long) (Math.random() * 100);
+                userVars.add(val);
+            }
+            reset();
+            run(userVars, functions, null, null, false);
+            totalCost += getCost();
+            totalCost += getCycles();
         }
-        return cycles;
+
+        this.averageCost = (int) (totalCost / NUM_TESTS);
     }
 
     public void reset() {
@@ -134,6 +146,7 @@ public class SprogramImpl extends FunctionExecutorImpl {
         newProgram.origVariables = new HashSet<>(this.origVariables);
         newProgram.cost = this.cost;
         newProgram.maxDegree = this.maxDegree;
+        newProgram.averageCost = this.getAverageCost();
         newProgram.setFunctions(this.funcNameList);
         newProgram.averageCost = this.averageCost;
         newProgram.setContext(context);
