@@ -6,6 +6,7 @@ import server.engine.input.XmlTranslator.Factory;
 import server.engine.program.FunctionExecutor;
 import server.engine.program.SprogramImpl;
 import shared.ExecutionStep;
+import shared.RunResultProperty;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

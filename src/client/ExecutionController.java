@@ -17,7 +17,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import server.auth.RunResultProperty;
+import shared.RunResultProperty;
 import shared.BaseRequest;
 import shared.BaseResponse;
 import shared.ExecutionStep;

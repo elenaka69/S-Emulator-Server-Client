@@ -3,7 +3,7 @@ package server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import server.auth.RunResultProperty;
+import shared.RunResultProperty;
 import server.engine.execution.ERROR_CODES;
 import server.engine.execution.EngineManager;
 import shared.BaseRequest;

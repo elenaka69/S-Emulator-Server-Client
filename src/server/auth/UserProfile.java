@@ -1,17 +1,14 @@
 package server.auth;
 
-import javafx.scene.control.TextField;
 import server.engine.execution.ERROR_CODES;
 import server.engine.execution.EngineManager;
-import server.engine.execution.ProgramCollection;
-import server.engine.impl.api.skeleton.AbstractOpBasic;
-import server.engine.impl.api.synthetic.OpFunctionBase;
 import server.engine.label.Label;
 import server.engine.program.FunctionExecutor;
 import server.engine.program.FunctionExecutorImpl;
 import server.engine.program.SprogramImpl;
 import server.engine.variable.VariableImpl;
 import shared.ExecutionStep;
+import shared.RunResultProperty;
 
 import java.time.LocalDateTime;
 import java.util.*;
