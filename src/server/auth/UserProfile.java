@@ -1,5 +1,6 @@
 package server.auth;
 
+import javafx.scene.control.TextField;
 import server.engine.execution.ERROR_CODES;
 import server.engine.execution.ProgramCollection;
 import server.engine.impl.api.skeleton.AbstractOpBasic;
@@ -13,6 +14,7 @@ import shared.ExecutionStep;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,6 +34,7 @@ public class UserProfile {
     private final AtomicBoolean isActive = new AtomicBoolean(true);
 
     private final List<ExecStatistic> executions = new CopyOnWriteArrayList<>();
+    private static final Map<String, List<RunResultProperty>> runResults = new ConcurrentHashMap<>();
 
     private volatile SprogramImpl chosenMainProgram = null;
     private volatile FunctionExecutor workingFunction = null;
@@ -179,6 +182,22 @@ public class UserProfile {
         executions.add(new ExecStatistic(type, name, arch, degree, (int) result, workingFunction.getCycles()));
     }
 
+    private void addExecResults(List<Long> userVars, int degree) {
+
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < workingFunction.getInputVarSize(); i++) {
+            String varName = workingFunction.getNextVar(i).getRepresentation();
+            sb.append(varName).append(" = ").append(userVars.get(i)).append("   ");
+        }
+        RunResultProperty result = new RunResultProperty(degree, sb.toString(),
+                workingFunction.getVariableValue(VariableImpl.RESULT),
+                workingFunction.getCycles());
+
+        runResults.computeIfAbsent(workingFunction.getName(), k -> Collections.synchronizedList(new ArrayList<>()))
+                .add(result);
+    }
+
     public int executeProgram(List<Long> userVars, List<ExecutionStep> executionDetails, int degree, Boolean isDebugMode) {
 
         if (workingFunction == null)
@@ -190,16 +209,17 @@ public class UserProfile {
         int result =  workingFunction.run(userVars, chosenMainProgram.getFunctions(), executionDetails, this,  isDebugMode);
 
         addExecStatistic(executionDetails, degree);
+        addExecResults(userVars, degree);
 
         return result;
     }
 
-    public int getRunStatistics(List<Long> runStatistics) {
+    public int getRunStatistics(List<RunResultProperty> runStatistics) {
         if (workingFunction != null) {
-            runStatistics.add(workingFunction.getVariableValue(VariableImpl.RESULT));
-            runStatistics.add((long) workingFunction.getCycles());
+            runStatistics.addAll(runResults.getOrDefault(workingFunction.getName(), Collections.emptyList()));
             return ERROR_CODES.ERROR_OK;
         }
+
         return ERROR_CODES.ERROR_FUNCTION_NOT_FOUND;
     }
 

@@ -87,12 +87,14 @@ public class SprogramImpl extends FunctionExecutorImpl {
     {
         double totalCost = 0.0;
         int NUM_TESTS = 3;
+        int MIN_RUNDOM_VALUES = 50;
+        int MAX_RUNDOM_VALUES = 200;
         int nInputs = inputVars.size();
         List<Long> userVars = new ArrayList<>();
         for (int i = 0; i < NUM_TESTS; i++) {
             userVars.clear();
             for (int j = 0; j < nInputs; j++) {
-                long val = (long) (Math.random() * 100);
+                long val = MIN_RUNDOM_VALUES + (long) (Math.random() * (MAX_RUNDOM_VALUES-MIN_RUNDOM_VALUES));
                 userVars.add(val);
             }
             reset();

@@ -1,5 +1,6 @@
 package server.engine.execution;
 
+import server.auth.RunResultProperty;
 import server.engine.program.FunctionExecutor;
 import server.engine.program.FunctionExecutorImpl;
 import server.engine.program.SprogramImpl;
@@ -7,13 +8,11 @@ import server.engine.program.SprogramImpl;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ProgramCollection {
 
     private static final Map<String, ProgramProperty> programs = new ConcurrentHashMap<>();
     private static final Map<String, FunctionProperty> functions = new ConcurrentHashMap<>();
-
 
     public static void registerProgram(String userName, String fileName, FunctionExecutor program) {
 
@@ -35,7 +34,6 @@ public class ProgramCollection {
     public static boolean isProgramExists(String fileName) {
         return programs.containsKey(fileName);
     }
-
 
     public static void registerFunction(String userName, String functionName, String programName, FunctionExecutor function) {
         FunctionProperty prop = new FunctionProperty(function, functionName, userName, programName);

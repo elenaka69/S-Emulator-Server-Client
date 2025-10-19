@@ -17,6 +17,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import server.auth.RunResultProperty;
 import shared.BaseRequest;
 import shared.BaseResponse;
 import shared.ExecutionStep;
@@ -165,6 +166,7 @@ public class ExecutionController {
         this.clientUsername = clientUsername;
         this.programName = programName;
         usernameField.setText(clientUsername);
+        setStatistics(false);
         chatHelper = new ChatUIHelper(chatBox, chatScrollPane, clientUsername);
         Platform.runLater(() -> {
             if (isChatVisible) {
@@ -445,7 +447,7 @@ public class ExecutionController {
             if (success) {
                 populateDebugTable(runListMap.size() - 1);
                 setDebuggingMode(false);
-                setStatistics();
+                setStatistics(true);
                 updateUserCredits();
             }
         }, false);
@@ -473,7 +475,7 @@ public class ExecutionController {
             return;
 
         if(currentStepIndex >= runListMap.size()){
-            setStatistics();
+            setStatistics(true);
             setDebuggingMode(false);
             showStatus("Debug finished.", Alert.AlertType.INFORMATION);
             return;
@@ -488,7 +490,7 @@ public class ExecutionController {
         currentStepIndex++;
         if(currentStepIndex >= runListMap.size())
         {
-            setStatistics();
+            setStatistics(true);
             setDebuggingMode(false);
             showStatus("Debug finished.", Alert.AlertType.INFORMATION);
             return;
@@ -578,38 +580,52 @@ public class ExecutionController {
     }
 
 
-    private void updateProgramStatisticTable(long result, int cycles)
+    private void updateProgramStatisticTable( List<RunResultProperty> runStatistics)
     {
         runHistoryCounter++;
 
-        int degree = Integer.parseInt(expandField.getText().trim());
-        StringBuilder sb = new StringBuilder();
-        int i = 0;
-        for (TextField field : paramFields) {
-            String text = field.getText();
-            String varName = inputVariables.get(i++);
-            long value = !text.isEmpty() ? Long.parseLong(text) : 0;
-            sb.append(varName).append(" = ").append(value).append("   ");
-        }
-
         historyRunData.add(new ProgramHistoryRow(
                 runHistoryCounter,
-                degree,
-                sb.toString(),
-                result,
-                cycles
+                runStatistics.get(runHistoryCounter-1).getDegree(),
+                runStatistics.get(runHistoryCounter-1).getInputVars(),
+                runStatistics.get(runHistoryCounter-1).getResult(),
+                runStatistics.get(runHistoryCounter-1).getCycles()
         ));
     }
-    private void setStatistics() {
+
+    private void populateProgramStatisticTable(List<RunResultProperty> runStatistics)
+    {
+        ObservableList<ProgramHistoryRow> data = FXCollections.observableArrayList();
+
+        for (int i = 0; i < runStatistics.size(); i++) {
+            RunResultProperty stat = runStatistics.get(i);
+            data.add(new ProgramHistoryRow(
+                    runHistoryCounter + 1,
+                    stat.getDegree(),
+                    stat.getInputVars(),
+                    stat.getResult(),
+                    stat.getCycles()
+            ));
+            runHistoryCounter++;
+        }
+
+        historyRunTable.setItems(data);
+    }
+
+    private void setStatistics(boolean isLastOnly) {
         BaseRequest req = new BaseRequest("getRunStatistic").add("username", clientUsername);
 
         sendRequest("http://localhost:8080/api", req, response -> {
             if (response.ok) {
-                Object resultVal = response.data.get("result");
-                Object cyclesVal = response.data.get("cycles");
-                long result = resultVal != null ? ((Number) resultVal).longValue() : 0;
-                int cycles = cyclesVal != null ? (Integer) cyclesVal : 0;
-                updateProgramStatisticTable(result,cycles);
+                List<RunResultProperty> runStatistics = mapper.convertValue(
+                        response.data.get("runStatistics"),
+                        new TypeReference<List<RunResultProperty>>() {}
+                );
+
+                if(isLastOnly)
+                    updateProgramStatisticTable(runStatistics);
+                else
+                    populateProgramStatisticTable(runStatistics);
 
             } else {
                 Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));

@@ -3,6 +3,7 @@ package server;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import server.auth.RunResultProperty;
 import server.engine.execution.ERROR_CODES;
 import server.engine.execution.EngineManager;
 import shared.BaseRequest;
@@ -479,14 +480,13 @@ public class ServerMain {
         if (!validateParameter(username))
             return new BaseResponse(false, "Invalid username");
 
-        List<Long> runStatistics = new ArrayList<>();
+        List<RunResultProperty> runStatistics = new ArrayList<>();
         int result = EngineManager.getInstance().getRunStatistics(username, runStatistics);
         return switch (result) {
             case ERROR_CODES.ERROR_USER_NOT_FOUND -> new BaseResponse(false, "User not found");
             case ERROR_CODES.ERROR_PROGRAM_NOT_FOUND -> new BaseResponse(false, "No program set for user");
             case ERROR_CODES.ERROR_OK -> new BaseResponse(true, "Run statistics fetched successfully")
-                    .add("result", runStatistics.get(0))
-                    .add("cycles", runStatistics.get(1));
+                    .add("runStatistics", runStatistics);
             default -> new BaseResponse(false, "Server error");
         };
     }

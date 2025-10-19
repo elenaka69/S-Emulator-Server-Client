@@ -1,9 +1,6 @@
 package server.engine.execution;
 
-import server.auth.ChatCollection;
-import server.auth.ExecStatistic;
-import server.auth.UserManager;
-import server.auth.UserProfile;
+import server.auth.*;
 import server.engine.impl.api.skeleton.AbstractOpBasic;
 import server.engine.input.XmlTranslator.Factory;
 import server.engine.program.FunctionExecutor;
@@ -349,7 +346,7 @@ public class EngineManager {
         return result;
     }
 
-    public int getRunStatistics(String username, List<Long> runStatistics) {
+    public int getRunStatistics(String username, List<RunResultProperty> runStatistics) {
         UserProfile profile = UserManager.getActiveUsers().get(username);
         if (profile == null || !profile.isActive()) return ERROR_CODES.ERROR_USER_NOT_FOUND;
 
