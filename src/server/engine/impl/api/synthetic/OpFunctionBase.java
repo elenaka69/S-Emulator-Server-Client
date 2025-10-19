@@ -263,7 +263,9 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
                     FunctionArgument funcArgument = (FunctionArgument) arg;
                     workVar = mainProgram.newWorkVar();
                     AbstractOpBasic opQuote = new OPQuote(workVar, funcArgument.getFunctionName(), funcArgument.getStrArguments(), parent);
-                    ((OpFunctionBase) opQuote).setFunction(mainProgram.getFunction(funcArgument.getFunctionName()));
+                    FunctionExecutor newQuoteFunction = mainProgram.getFunction(funcArgument.getFunctionName()).myClone();
+                    ((FunctionExecutorImpl)newQuoteFunction).updateFunctionOps();
+                    ((OpFunctionBase) opQuote).setFunction(newQuoteFunction);
                     ops.add(opQuote);
                 }
                 vars.put(funcVar, workVar); // change key to val in function

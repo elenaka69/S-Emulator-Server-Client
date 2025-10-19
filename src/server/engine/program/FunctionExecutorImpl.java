@@ -268,6 +268,7 @@ public class FunctionExecutorImpl implements FunctionExecutor {
         }
     }
 
+    @Override
     public void updateFunctionOps() {
         for (AbstractOpBasic op : opList) {
             if (op instanceof OpFunctionBase) {
@@ -278,7 +279,9 @@ public class FunctionExecutorImpl implements FunctionExecutor {
                 else
                     func = getFunction(funName);
                 if (func != null) {
-                    ((OpFunctionBase) op).setFunction(func);
+                    FunctionExecutor clone = func.myClone();
+                    clone.updateFunctionOps();
+                    ((OpFunctionBase) op).setFunction(clone);
                 }
             }
         }

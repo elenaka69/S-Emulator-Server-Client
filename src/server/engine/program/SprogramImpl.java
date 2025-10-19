@@ -67,11 +67,12 @@ public class SprogramImpl extends FunctionExecutorImpl {
     {
         if (functions == null)
             return;
-        updateFunctionOps();
 
         functions.forEach(func->{
             ((FunctionExecutorImpl)func).updateFunctionOps();
         });
+
+        updateFunctionOps();
     }
 
     public void reset() {

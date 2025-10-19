@@ -59,4 +59,5 @@ public interface FunctionExecutor
     String getUserString();
     void setFunctions( Set<String> funcNameList);
     Set<String> getFuncNameList();
+    void updateFunctionOps();
 }
