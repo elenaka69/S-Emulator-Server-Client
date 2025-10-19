@@ -57,4 +57,6 @@ public interface FunctionExecutor
     void setParentProgram(SprogramImpl chosenMainProgram);
     SprogramImpl getParentProgram();
     String getUserString();
+    void setFunctions( Set<String> funcNameList);
+    Set<String> getFuncNameList();
 }

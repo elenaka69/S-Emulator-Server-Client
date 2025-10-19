@@ -4,7 +4,6 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 
-import server.engine.execution.EngineManager;
 import server.engine.execution.ProgramCollection;
 import server.engine.impl.api.basic.*;
 import server.engine.impl.api.skeleton.AbstractOpBasic;
@@ -95,7 +94,7 @@ public class Factory
         }
 
         try {
-            res = buildProgram(program, collection.getInstructions(), collection.getDefinedLabels());
+            res = buildProgram(program, collection.getInstructions(), collection.getDefinedLabels(),  null);
             if (res != ERROR_CODES.ERROR_OK) {
                 removeFunctions();
                 return res;
@@ -107,7 +106,7 @@ public class Factory
         if (collection.getInstructions().size() == 1 && collection.getInstructions().get(0).getName().equals("NEUTRAL"))
             return ERROR_CODES.ERROR_PROGRAM_WO_INSTRUCTIONS;
 
-        ((SprogramImpl)program).setFunctions(functions);
+        program.setFunctions(functions);
         ((SprogramImpl) program).calculateCost();
         ProgramCollection.registerProgram(username, fileName, program);
         return ERROR_CODES.ERROR_OK;
@@ -195,6 +194,7 @@ public class Factory
             functions.add(name);
         });
 
+        Map<String, List<String>> mapFunctions = new HashMap<>();
         for (XFunction xFunc : xFunctions) {
             String name = xFunc.getName();
 
@@ -209,20 +209,50 @@ public class Factory
                 FunctionExecutor func = ProgramCollection.getFunction(xFunc.getName());
 
                 validateLabels(collection.getInstructions(), collection.getDefinedLabels());
-                res = buildProgram(func, collection.getInstructions(), collection.getDefinedLabels());
+                res = buildProgram(func, collection.getInstructions(), collection.getDefinedLabels(),  mapFunctions);
                 if (res != ERROR_CODES.ERROR_OK)
                     break; // stop loop on first error
                 ProgramCollection.updateFunctionStatistics(name);
             }
         };
+        Map<String, Set<String>> expanded = expandAll(mapFunctions);
+        for (String funcName : expanded.keySet()) {
+            FunctionExecutor func = ProgramCollection.getFunction(funcName);
+            if (func != null)
+                func.setFunctions(expanded.get(funcName));
+             functions.addAll(expanded.get(funcName));
+        }
+
         return res;
     }
 
-    private int validateFunctions(String funcName, String funcArgs) {
+    private static Map<String, Set<String>> expandAll(Map<String, List<String>> original) {
+        Map<String, Set<String>> expanded = new HashMap<>();
+        for (String func : original.keySet()) {
+            expanded.put(func, getAllDependencies(func, original, new HashSet<>()));
+        }
+        return expanded;
+    }
+
+    private static Set<String> getAllDependencies(String func, Map<String, List<String>> original, Set<String> visited) {
+        if (visited.contains(func)) return new HashSet<>(); // avoid infinite loops
+        visited.add(func);
+
+        Set<String> result = new HashSet<>();
+        List<String> subs = original.getOrDefault(func, Collections.emptyList());
+
+        for (String sub : subs) {
+            result.add(sub);
+            result.addAll(getAllDependencies(sub, original, new HashSet<>(visited)));
+        }
+        return result;
+    }
+
+    private int validateFunctions(String funcName, String funcArgs, Set<String> subFunctions) {
 
         if (!ProgramCollection.isFunctionExists(funcName))
             return ERROR_CODES.ERROR_FUNCTION_MISSING;
-        functions.add(funcName);
+        subFunctions.add(funcName);
 
         if (funcArgs == null || !funcArgs.contains("(")) {
             return ERROR_CODES.ERROR_OK;
@@ -262,7 +292,7 @@ public class Factory
                 word = funcArgs.substring(wordStart, pos);
                 if (!ProgramCollection.isFunctionExists(word))
                     return ERROR_CODES.ERROR_FUNCTION_MISSING;
-                functions.add(word);
+                subFunctions.add(word);
             }
 
             // continue searching for the next '(' after current '('
@@ -273,16 +303,20 @@ public class Factory
     }
 
     // 4. Build internal Program object
-    public int buildProgram(FunctionExecutor program, List<XOp> sInstructions, LinkedHashSet<Label> definedLabels ) throws IllegalArgumentException
+    public int buildProgram(FunctionExecutor program, List<XOp> sInstructions, LinkedHashSet<Label> definedLabels,  Map<String, List<String>> mapFunctions) throws IllegalArgumentException
     {
         // Prepare a set to track all variable names used (for initialization)
         Set<VariableImpl> allVars = new HashSet<>();
         Set<VariableImpl> inputVars = new TreeSet<>(
                 Comparator.comparing(VariableImpl::getRepresentation)
         );
+
+        Set<String> subFunctions = new HashSet<>();;
+
         Label lbl;
         String labelRegex = "L\\d+"; // regex pattern for valid labels like L1, L2, etc.
         int i = 1;
+
 
         // Convert each SInstruction to an AbstractOpBasic object and add to program
         for (XOp inst : sInstructions) {
@@ -445,7 +479,7 @@ public class Factory
                         String funcName = getArgumentValue(inst, "functionName");
                         String functionArguments = getArgumentValue(inst, "functionArguments");
 
-                        if (validateFunctions(funcName, functionArguments) != ERROR_CODES.ERROR_OK)
+                        if (validateFunctions(funcName, functionArguments, subFunctions) != ERROR_CODES.ERROR_OK)
                             return ERROR_CODES.ERROR_FUNCTION_MISSING;
 
                         Label targetLabel;
@@ -463,7 +497,7 @@ public class Factory
                     case "QUOTE": {
                         String funcName = getArgumentValue(inst, "functionName");
                         String functionArguments = getArgumentValue(inst, "functionArguments");
-                        if (validateFunctions(funcName, functionArguments) != ERROR_CODES.ERROR_OK)
+                        if (validateFunctions(funcName, functionArguments, subFunctions) != ERROR_CODES.ERROR_OK)
                             return ERROR_CODES.ERROR_FUNCTION_MISSING;
                         extractVarFromArgs( functionArguments,  inputVars,  allVars);
                         op = new OPQuote(curVar, lbl, funcName, functionArguments);
@@ -479,7 +513,10 @@ public class Factory
                 i++;
 
                 program.getOps().add(op);  // add the constructed operation to the program's list
-            }
+        }
+
+        if(mapFunctions != null)
+            mapFunctions.put(program.getName(), new ArrayList<>(subFunctions));
             // Also ensure the special result variable "y" exists and is initialized to 0
         allVars.add(VariableImpl.RESULT);
         program.addLabelSet(definedLabels);

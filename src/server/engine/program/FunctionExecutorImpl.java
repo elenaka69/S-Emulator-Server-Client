@@ -34,6 +34,8 @@ public class FunctionExecutorImpl implements FunctionExecutor {
     protected int maxDegree;
     private SprogramImpl parentProgram = null;
 
+    protected Set<String> funcNameList;
+
     public void setParentProgram(SprogramImpl parentProgram) {
         this.parentProgram = parentProgram;
     }
@@ -51,6 +53,15 @@ public class FunctionExecutorImpl implements FunctionExecutor {
         variables = new HashSet<>();
         labelsHashSet = new LinkedHashSet<>();
         inputVars = new ArrayList<>();
+    }
+
+    @Override
+    public void setFunctions( Set<String> funcNameList) {
+        this.funcNameList = new HashSet<>(funcNameList);
+    }
+    @Override
+    public Set<String> getFuncNameList() {
+        return funcNameList;
     }
 
     public int getCost() {

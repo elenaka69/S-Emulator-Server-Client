@@ -8,8 +8,7 @@ import java.util.*;
 
 public class SprogramImpl extends FunctionExecutorImpl {
 
-    List <FunctionExecutor> functions;
-    Set<String> funcNameList;
+    private List <FunctionExecutor> functions;
 
     public SprogramImpl(String name) {
         super(name);
@@ -33,6 +32,7 @@ public class SprogramImpl extends FunctionExecutorImpl {
         this.origVariables = other.origVariables != null ? new HashSet<>(other.origVariables) : null;
         this.labelsHashSet = other.labelsHashSet != null ? new LinkedHashSet<>(other.labelsHashSet) : null;
         this.setUserString(other.getUserString());
+        this.funcNameList = other.funcNameList != null ? new HashSet<>(other.funcNameList) : null;
         functions = null;
     }
 
@@ -41,14 +41,6 @@ public class SprogramImpl extends FunctionExecutorImpl {
             functions = new ArrayList<>();
         functions.add(func);
     };
-
-    public void setFunctions( Set<String> funcNameList) {
-        this.funcNameList = new HashSet<>(funcNameList);
-    }
-
-    public Set<String> getFuncNameList() {
-        return funcNameList;
-    }
 
     public List<FunctionExecutor> getFunctions() {
         return functions;
