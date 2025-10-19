@@ -298,7 +298,7 @@ public class Factory
             // continue searching for the next '(' after current '('
             i = start + 1;
         }
-
+        functions.addAll(subFunctions);
         return ERROR_CODES.ERROR_OK;
     }
 
