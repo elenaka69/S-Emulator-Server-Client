@@ -109,7 +109,6 @@ public class Factory
 
         ((SprogramImpl)program).setFunctions(functions);
         ((SprogramImpl) program).calculateCost();
-        EngineManager.getInstance().caclulateAvarageCost((SprogramImpl) program);
         ProgramCollection.registerProgram(username, fileName, program);
         return ERROR_CODES.ERROR_OK;
     }

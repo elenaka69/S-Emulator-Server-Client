@@ -166,9 +166,9 @@ public class ExecutionController {
         this.clientUsername = clientUsername;
         this.programName = programName;
         usernameField.setText(clientUsername);
-        setStatistics(false);
         chatHelper = new ChatUIHelper(chatBox, chatScrollPane, clientUsername);
         Platform.runLater(() -> {
+            setStatistics();
             if (isChatVisible) {
                 chatPane.setVisible(true);
                 chatPane.setManaged(true);
@@ -447,7 +447,7 @@ public class ExecutionController {
             if (success) {
                 populateDebugTable(runListMap.size() - 1);
                 setDebuggingMode(false);
-                setStatistics(true);
+                setStatistics();
                 updateUserCredits();
             }
         }, false);
@@ -475,7 +475,7 @@ public class ExecutionController {
             return;
 
         if(currentStepIndex >= runListMap.size()){
-            setStatistics(true);
+            setStatistics();
             setDebuggingMode(false);
             showStatus("Debug finished.", Alert.AlertType.INFORMATION);
             return;
@@ -490,7 +490,7 @@ public class ExecutionController {
         currentStepIndex++;
         if(currentStepIndex >= runListMap.size())
         {
-            setStatistics(true);
+            setStatistics();
             setDebuggingMode(false);
             showStatus("Debug finished.", Alert.AlertType.INFORMATION);
             return;
@@ -579,20 +579,6 @@ public class ExecutionController {
         instructionTable.refresh();
     }
 
-
-    private void updateProgramStatisticTable( List<RunResultProperty> runStatistics)
-    {
-        runHistoryCounter++;
-
-        historyRunData.add(new ProgramHistoryRow(
-                runHistoryCounter,
-                runStatistics.get(runHistoryCounter-1).getDegree(),
-                runStatistics.get(runHistoryCounter-1).getInputVars(),
-                runStatistics.get(runHistoryCounter-1).getResult(),
-                runStatistics.get(runHistoryCounter-1).getCycles()
-        ));
-    }
-
     private void populateProgramStatisticTable(List<RunResultProperty> runStatistics)
     {
         ObservableList<ProgramHistoryRow> data = FXCollections.observableArrayList();
@@ -612,7 +598,7 @@ public class ExecutionController {
         historyRunTable.setItems(data);
     }
 
-    private void setStatistics(boolean isLastOnly) {
+    private void setStatistics() {
         BaseRequest req = new BaseRequest("getRunStatistic").add("username", clientUsername);
 
         sendRequest("http://localhost:8080/api", req, response -> {
@@ -622,10 +608,7 @@ public class ExecutionController {
                         new TypeReference<List<RunResultProperty>>() {}
                 );
 
-                if(isLastOnly)
-                    updateProgramStatisticTable(runStatistics);
-                else
-                    populateProgramStatisticTable(runStatistics);
+                populateProgramStatisticTable(runStatistics);
 
             } else {
                 Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));

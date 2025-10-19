@@ -2,6 +2,7 @@ package server.auth;
 
 import javafx.scene.control.TextField;
 import server.engine.execution.ERROR_CODES;
+import server.engine.execution.EngineManager;
 import server.engine.execution.ProgramCollection;
 import server.engine.impl.api.skeleton.AbstractOpBasic;
 import server.engine.impl.api.synthetic.OpFunctionBase;
@@ -210,6 +211,7 @@ public class UserProfile {
 
         addExecStatistic(executionDetails, degree);
         addExecResults(userVars, degree);
+        EngineManager.getInstance().incrementProgramExecs(mainProgramName, workingFunction.getCycles());
 
         return result;
     }

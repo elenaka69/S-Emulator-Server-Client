@@ -31,7 +31,6 @@ public class FunctionExecutorImpl implements FunctionExecutor {
     protected LinkedHashSet <Label> labelsHashSet;
     private String userString;
     protected int cost = 0;
-    protected int averageCost = 0;
     protected int maxDegree;
     private SprogramImpl parentProgram = null;
 
@@ -57,8 +56,6 @@ public class FunctionExecutorImpl implements FunctionExecutor {
     public int getCost() {
         return cost;
     }
-    public int getAverageCost() { return averageCost; }
-    public void setAverageCost(int averageCost) { this.averageCost = averageCost; }
     @Override
     public String getUserString() { return userString; }
 
@@ -292,7 +289,7 @@ public class FunctionExecutorImpl implements FunctionExecutor {
         newFunc.cost = this.cost;
         newFunc.maxDegree = this.maxDegree;
         newFunc.parentProgram = this.parentProgram;
-        newFunc.averageCost = this.averageCost;
+
         return newFunc;
     }
 

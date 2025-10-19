@@ -130,7 +130,7 @@ public class DashboardController {
         programsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
             if (newSel != null) {
                 typeProgramSelected = SELECT_PROGRAM;
-                selectedProgramCost = newSel.getAverCost();
+                selectedProgramCost = newSel.getAverCost() + newSel.getMaxCost();
                 selectedProgram = newSel.getName();
                 Platform.runLater(() -> functionsTable.getSelectionModel().clearSelection());
             }

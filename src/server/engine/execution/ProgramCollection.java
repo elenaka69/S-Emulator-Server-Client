@@ -1,11 +1,9 @@
 package server.engine.execution;
 
-import server.auth.RunResultProperty;
 import server.engine.program.FunctionExecutor;
 import server.engine.program.FunctionExecutorImpl;
 import server.engine.program.SprogramImpl;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -73,10 +71,10 @@ public class ProgramCollection {
         return functions;
     }
 
-    public static void incrementProgramExecs(String programName) {
+    public static void incrementProgramExecs(String programName, int cycles) {
         ProgramProperty prop = programs.get(programName);
         if (prop != null ) {
-            prop.incrementExecs();
+            prop.incrementExecs(cycles);
         }
     }
 }

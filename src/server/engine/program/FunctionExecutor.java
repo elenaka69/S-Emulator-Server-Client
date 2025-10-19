@@ -20,8 +20,6 @@ public interface FunctionExecutor
     int getNumInstuctions();
     int getCycles();
     int getCost();
-    int getAverageCost();
-    void setAverageCost(int averageCost);
     void increaseCycleCounter(int cycles);
     void reset();
     Label newUniqueLabel();

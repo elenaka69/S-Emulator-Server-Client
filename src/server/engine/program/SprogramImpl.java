@@ -25,7 +25,6 @@ public class SprogramImpl extends FunctionExecutorImpl {
             }
         }
         this.cost = other.cost;
-        this.averageCost = other.averageCost;
         this.maxDegree = other.maxDegree;
         this.inputVars = other.inputVars != null ? new ArrayList<>(other.inputVars) : null;
         setContext(other.context);
@@ -83,29 +82,6 @@ public class SprogramImpl extends FunctionExecutorImpl {
         });
     }
 
-    public void calculateAverageCost()
-    {
-        double totalCost = 0.0;
-        int NUM_TESTS = 3;
-        int MIN_RUNDOM_VALUES = 50;
-        int MAX_RUNDOM_VALUES = 200;
-        int nInputs = inputVars.size();
-        List<Long> userVars = new ArrayList<>();
-        for (int i = 0; i < NUM_TESTS; i++) {
-            userVars.clear();
-            for (int j = 0; j < nInputs; j++) {
-                long val = MIN_RUNDOM_VALUES + (long) (Math.random() * (MAX_RUNDOM_VALUES-MIN_RUNDOM_VALUES));
-                userVars.add(val);
-            }
-            reset();
-            run(userVars, functions, null, null, false);
-            totalCost += getCost();
-            totalCost += getCycles();
-        }
-
-        this.averageCost = (int) (totalCost / NUM_TESTS);
-    }
-
     public void reset() {
         this.cycles = 0;
         this.opListIndex = 0;
@@ -148,9 +124,7 @@ public class SprogramImpl extends FunctionExecutorImpl {
         newProgram.origVariables = new HashSet<>(this.origVariables);
         newProgram.cost = this.cost;
         newProgram.maxDegree = this.maxDegree;
-        newProgram.averageCost = this.getAverageCost();
         newProgram.setFunctions(this.funcNameList);
-        newProgram.averageCost = this.averageCost;
         newProgram.setContext(context);
         newProgram.updateLabels();
 
