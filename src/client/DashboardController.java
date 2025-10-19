@@ -95,6 +95,8 @@ public class DashboardController {
     private final int SELECT_PROGRAM = 1;
     private final int SELECT_FUNCTION = 2;
     private int typeProgramSelected = SELECT_NONE;
+    private Set<String> highlightedFunctions = new HashSet<>();
+    private Set<String> highlightedProgram = new HashSet<>();
 
     @FXML
     public void initialize() {
@@ -133,19 +135,112 @@ public class DashboardController {
                 selectedProgramCost = newSel.getAverCost() + newSel.getMaxCost();
                 selectedProgram = newSel.getName();
                 Platform.runLater(() -> functionsTable.getSelectionModel().clearSelection());
+                highlightedFunctions.clear();
+                functionsTable.refresh();
+                highlightedProgram.clear();
+                programsTable.refresh();
+                fetchProgramFunctions(newSel.getName());
             }
         });
 
         functionsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
             if (newSel != null) {
                 typeProgramSelected = SELECT_FUNCTION;
-                selectedProgramCost = 0; // TODO get function cost?
+                selectedProgramCost = newSel.getMaxCost();
                 selectedProgram = newSel.getName();
                 Platform.runLater(() -> programsTable.getSelectionModel().clearSelection());
+                highlightedFunctions.clear();
+                functionsTable.refresh();
+                highlightedProgram.clear();
+                programsTable.refresh();
+                fetchSubFunctions(newSel.getName());
+            }
+        });
+
+        functionsTable.setRowFactory(table -> new TableRow<FunctionsRow>() {
+            @Override
+            protected void updateItem(FunctionsRow row, boolean empty) {
+                super.updateItem(row, empty);
+
+                if (empty || row == null) {
+                    setStyle("");
+                } else if (highlightedFunctions.contains(row.getName())) {
+                    setStyle("-fx-background-color: lightgreen;"); // highlighted rows
+                } else {
+                    setStyle(""); // normal rows
+                }
+            }
+        });
+        programsTable.setRowFactory(table -> new TableRow<ProgramsRow>() {
+            @Override
+            protected void updateItem(ProgramsRow row, boolean empty) {
+                super.updateItem(row, empty);
+
+                if (empty || row == null) {
+                    setStyle("");
+                } else if (highlightedProgram.contains(row.getName())) {
+                    setStyle("-fx-background-color: lightblue;"); // highlighted rows
+                } else {
+                    setStyle(""); // normal rows
+                }
             }
         });
 
         startScheduler();
+    }
+
+    private void fetchSubFunctions(String name) {
+        BaseRequest req = new BaseRequest("getSubFunctionsList")
+                .add("funcName", name);
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            Platform.runLater(() -> {
+                if (response.ok) {
+                    List<String> funcNames  = mapper.convertValue(
+                            response.data.get("functions"),
+                            mapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                    );
+                    List<String> progNames  = mapper.convertValue(
+                            response.data.get("programs"),
+                            mapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                    );
+
+                    Platform.runLater(() -> {
+                        highlightedFunctions.clear();
+                        highlightedFunctions.addAll(funcNames);
+                        highlightedProgram.clear();
+                        highlightedProgram.addAll(progNames);
+                        functionsTable.refresh();
+                        programsTable.refresh();
+                    });
+                } else {
+                    Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+                }
+            });
+        });
+    }
+
+    private void fetchProgramFunctions(String name) {
+        BaseRequest req = new BaseRequest("getProgramFunctionsList")
+                .add("programName", name);
+
+        sendRequest("http://localhost:8080/api", req, response -> {
+            Platform.runLater(() -> {
+                if (response.ok) {
+                    List<String> names  = mapper.convertValue(
+                            response.data.get("functions"),
+                            mapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                    );
+                    Platform.runLater(() -> {
+                        highlightedFunctions.clear();
+                        highlightedFunctions.addAll(names);
+                        functionsTable.refresh(); // trigger re-draw
+                    });
+                } else {
+                    Platform.runLater(() -> showStatus(response.message, Alert.AlertType.WARNING));
+                }
+            });
+        });
     }
 
     public void startDashBoard(String username, boolean isChatVisible) {

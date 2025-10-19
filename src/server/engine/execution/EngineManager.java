@@ -376,4 +376,28 @@ public class EngineManager {
         }
         return ERROR_CODES.ERROR_OK;
     }
+
+    public int fetchFunctionsNameList(String programName, List<String> functionsList) {
+        SprogramImpl program = ProgramCollection.getProgram(programName);
+        if (program == null) return ERROR_CODES.ERROR_PROGRAM_NOT_FOUND;
+
+        functionsList.addAll(program.getFuncNameList());
+        return ERROR_CODES.ERROR_OK;
+    }
+
+    public int fetchSubFunctionsList(String funcName, List<String> functionsList, List<String> programsList) {
+        FunctionExecutor function = ProgramCollection.getFunction(funcName);
+        if (function == null) return ERROR_CODES.ERROR_FUNCTION_NOT_FOUND;
+
+        functionsList.addAll(function.getFuncNameList());
+
+        Map<String, ProgramProperty> programs = ProgramCollection.getPrograms();
+        for (Map.Entry<String, ProgramProperty> entry : programs.entrySet()) {
+            FunctionExecutor func = entry.getValue().getExecutor();
+            if (func.getFuncNameList().contains(funcName))
+                programsList.add(entry.getKey());
+        }
+
+        return ERROR_CODES.ERROR_OK;
+    }
 }

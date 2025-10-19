@@ -56,6 +56,8 @@ public class ServerMain {
                 case "ping" -> new BaseResponse(true, "pong");
                 case "getPrograms" -> handlePrograms(req);
                 case "getFunctions" -> handleFunctions(req);
+                case "getProgramFunctionsList" -> handleFunctionsList(req);
+                case "getSubFunctionsList" -> handleSubFunctionsList(req);
                 case "sendMessage" -> handleSendMessage(req);
                 case "getMessages" -> handleGendMessage(req);
                 /* Execution Page */
@@ -241,6 +243,38 @@ public class ServerMain {
             return new BaseResponse(false, "Failed to fetch functions");
 
         return new BaseResponse(true, "Functions fetched successfully").add("functions", functionsList);
+    }
+
+    private static BaseResponse handleFunctionsList(BaseRequest req) {
+        String programName = getString(req, "programName");
+        if (!validateParameter(programName)) {
+            return new BaseResponse(false, "Invalid programName");
+        }
+
+        List<String> functionsList = new ArrayList<>();
+
+        int result = EngineManager.getInstance().fetchFunctionsNameList(programName, functionsList);
+        if (result != ERROR_CODES.ERROR_OK)
+            return new BaseResponse(false, "Failed to fetch functions list name");
+
+        return new BaseResponse(true, "Functions fetched successfully").add("functions", functionsList);
+    }
+
+    private static BaseResponse handleSubFunctionsList(BaseRequest req) {
+        String funcName = getString(req, "funcName");
+        if (!validateParameter(funcName)) {
+            return new BaseResponse(false, "Invalid funcName");
+        }
+
+        List<String> functionsList = new ArrayList<>();
+        List<String> programsList = new ArrayList<>();
+        int result = EngineManager.getInstance().fetchSubFunctionsList(funcName, functionsList, programsList);
+        if (result != ERROR_CODES.ERROR_OK)
+            return new BaseResponse(false, "Failed to fetch subFunctions list name");
+
+        return new BaseResponse(true, "subFunctions fetched successfully")
+                .add("functions", functionsList)
+                .add("programs", programsList);
     }
 
     private static BaseResponse handleSendMessage(BaseRequest req) {
