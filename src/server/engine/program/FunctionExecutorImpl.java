@@ -452,7 +452,9 @@ public class FunctionExecutorImpl implements FunctionExecutor {
 
             stepCost += current.getCycles();
             if (isMainProgram && !isDebugMode) {
-                owner.deductCredit(stepCost);
+                if (owner.deductCredit(stepCost) != ERROR_CODES.ERROR_OK) {
+                    return ERROR_CODES.ERROR_NOT_ENOUGH_CREDIT;
+                }
             }
 
             if (next.equals(FixedLabel.EXIT)) {

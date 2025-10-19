@@ -437,8 +437,8 @@ public class ExecutionController {
             if (success) {
                 setDebuggingMode(true);
                 stepOverRoutine();
-                updateUserCredits();
             }
+            updateUserCredits();
         }, true);
     }
 
@@ -448,9 +448,10 @@ public class ExecutionController {
                 populateDebugTable(runListMap.size() - 1);
                 setDebuggingMode(false);
                 setStatistics();
-                updateUserCredits();
             }
+            updateUserCredits();
         }, false);
+
     }
 
     private void updateUserCredits() {
@@ -549,7 +550,10 @@ public class ExecutionController {
 
                 boolean finalSuccess = success;
                 Platform.runLater(() -> {
-                    showStatus(response.message, response.ok ? Alert.AlertType.INFORMATION : Alert.AlertType.WARNING);
+                    if (response.ok)
+                        showStatus(response.message, Alert.AlertType.INFORMATION);
+                    else
+                        showAlert("Run Failed", response.message, Alert.AlertType.ERROR);
                     callback.accept(finalSuccess);
                 });
             });
