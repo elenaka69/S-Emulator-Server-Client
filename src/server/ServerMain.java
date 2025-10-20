@@ -11,6 +11,7 @@ import shared.BaseResponse;
 import shared.ExecutionStep;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.*;
@@ -23,12 +24,64 @@ public class ServerMain {
     public static void main(String[] args) throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 8080), 0);
         server.createContext("/api", ServerMain::handleApi);
+        server.createContext("/", ServerMain::handleStaticFiles);
         server.setExecutor(Executors.newFixedThreadPool(8)); // Thread pool for concurrency
         server.start();
-        System.out.println("✅ Server started on http://localhost:8080/api");
+        System.out.println("✅ Server started at: http://localhost:8080");
+        System.out.println("   API available at: http://localhost:8080/api");
+    }
+
+    private static void handleStaticFiles(HttpExchange exchange) throws IOException {
+        addCORS(exchange);
+
+        String path = exchange.getRequestURI().getPath();
+        if (path.equals("/")) path = "/index.html";
+
+        // Path relative to resources/webclient
+        String resourcePath = "webclient" + path;
+
+        // Load from resources (works both in IntelliJ and JAR)
+        InputStream fileStream = ServerMain.class.getClassLoader().getResourceAsStream(resourcePath);
+        if (fileStream == null) {
+            exchange.sendResponseHeaders(404, -1);
+            return;
+        }
+
+        String contentType = getContentType(path);
+        exchange.getResponseHeaders().set("Content-Type", contentType);
+
+        byte[] bytes = fileStream.readAllBytes();
+        exchange.sendResponseHeaders(200, bytes.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(bytes);
+        }
+    }
+
+    private static String getContentType(String path) {
+        if (path.endsWith(".css")) return "text/css";
+        if (path.endsWith(".js")) return "application/javascript";
+        if (path.endsWith(".png")) return "image/png";
+        if (path.endsWith(".jpg") || path.endsWith(".jpeg")) return "image/jpeg";
+        if (path.endsWith(".json")) return "application/json";
+        return "text/html";
+    }
+
+    private static void addCORS(HttpExchange exchange) {
+        exchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        exchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type");
     }
 
     private static void handleApi(HttpExchange ex) throws IOException {
+
+        addCORS(ex);
+
+        //  Handle preflight requests from browsers
+        if ("OPTIONS".equalsIgnoreCase(ex.getRequestMethod())) {
+            ex.sendResponseHeaders(204, -1); // 204 No Content
+            return;
+        }
+
         if (!"POST".equalsIgnoreCase(ex.getRequestMethod())) {
             ex.sendResponseHeaders(405, -1);
             return;

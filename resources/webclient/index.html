@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>S-Emulator Login</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Header include -->
+<div id="header">
+    <h1>S-Emulator</h1>
+</div>
+<hr>
+
+<main>
+    <img src="icons/login.png" alt="Login Icon" class="login-icon">
+    <h2>Login</h2>
+
+    <!-- Error messages -->
+    <div class="errorLogin" id="errorMsg"></div>
+
+    <form id="loginForm">
+        <div class="input-container">
+            <img src="icons/user-icon.png" alt="User Icon" class="input-icon">
+            <input type="text" id="username" name="username" placeholder="Username" required>
+        </div>
+        <br>
+        <button type="submit">Login</button>
+    </form>
+</main>
+
+<!-- Footer include -->
+<hr>
+<footer>
+    <script>
+        document.write(new Date().toLocaleDateString());
+    </script>
+</footer>
+
+<script src="js/login.js"></script>
+</body>
+</html>

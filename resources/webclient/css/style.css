@@ -1,0 +1,32 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    text-align: center;
+}
+
+header, footer {
+    background-color: #ddd;
+    padding: 10px;
+}
+
+main {
+    margin-top: 40px;
+}
+
+.input-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10px auto;
+}
+
+.input-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 5px;
+}
+
+.errorLogin {
+    color: red;
+    margin: 10px;
+}
