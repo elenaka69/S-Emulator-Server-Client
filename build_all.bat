@@ -10,15 +10,19 @@ set "SERVER_MAIN_CLASS=server.ServerMain"
 set "CLIENT_MAIN_CLASS=client.MainApp"
 REM =========================================================
 
-REM create output folders
+REM ---------------- CREATE OUTPUT FOLDERS -------------------
 if not exist out mkdir out
 if not exist out\server mkdir out\server
 if not exist out\client mkdir out\client
 if not exist dist mkdir dist
 
-REM ================== COLLECT SERVER + SHARED SOURCES ==================
-echo Collecting server and shared sources...
+REM ---------------- CLEAN OLD SOURCE LISTS -----------------
 if exist sources_server.txt del sources_server.txt
+if exist sources_client.txt del sources_client.txt
+
+REM ================ COLLECT SERVER + SHARED SOURCES =========
+echo.
+echo ================= Collecting server + shared sources =================
 for /r "src\server" %%f in (*.java) do (
     set "p=%%~f"
     set "p=!p:\=/!"
@@ -46,7 +50,17 @@ if errorlevel 1 (
     exit /b 1
 )
 
+REM -------------- COPY SERVER RESOURCES (webclient) ----------
+echo.
+echo Copying server resources (webclient)...
+if not exist out\server\webclient mkdir out\server\webclient
+xcopy /E /I /Y "resources\webclient" out\server\webclient >nul
+if errorlevel 1 (
+    echo [WARNING] Some server resources may not have been copied.
+)
+
 REM ================== PACKAGE SERVER JAR ==================
+if exist dist\server.jar del dist\server.jar
 echo Packaging server.jar...
 jar cfe dist\server.jar %SERVER_MAIN_CLASS% -C out\server .
 if errorlevel 1 (
@@ -57,7 +71,7 @@ if errorlevel 1 (
 
 REM ================== COLLECT CLIENT + SHARED SOURCES ==================
 echo.
-echo Collecting client and shared sources...
+echo ================= Collecting client + shared sources =================
 if exist sources_client.txt del sources_client.txt
 for /r "src\client" %%f in (*.java) do (
     set "p=%%~f"
@@ -74,7 +88,7 @@ for /f %%c in ('find /v /c "" ^< sources_client.txt') do set CLIENT_COUNT=%%c
 echo Found %CLIENT_COUNT% client/shared source(s).
 
 REM ================== COMPILE CLIENT (JavaFX) ==================
-echo Compiling client...
+echo Compiling client (JavaFX)...
 if "%PATH_TO_FX%"=="" (
     echo [ERROR] PATH_TO_FX is not set. Edit build_all.bat and set it.
     pause
@@ -93,13 +107,15 @@ if errorlevel 1 (
 )
 
 REM ================== COPY CLIENT RESOURCES ==================
-echo Copying client resources...
+echo.
+echo Copying client resources (css, fxml, icons)...
 if not exist out\client\client mkdir out\client\client
 xcopy /E /I /Y "resources\client\css" out\client\client\css >nul
 xcopy /E /I /Y "resources\client\fxml" out\client\client\fxml >nul
 xcopy /E /I /Y "resources\client\icons" out\client\client\icons >nul
 
 REM ================== PACKAGE CLIENT JAR ==================
+echo.
 echo Packaging client.jar...
 jar cfe dist\client.jar %CLIENT_MAIN_CLASS% -C out\client .
 if errorlevel 1 (
@@ -107,7 +123,7 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
-
+REM ----------------- FINISHED ------------------------------
 echo.
 echo === BUILD SUCCEEDED ===
 echo Server jar: dist\server.jar
