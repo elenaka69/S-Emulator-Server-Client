@@ -347,3 +347,44 @@ th, td {
     background-color: #90caf9;
     color: white;
 }
+.comboBox-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+#highlightComboBox,
+ #funcsComboBox {
+    padding: 6px 30px 6px 10px; /* right padding leaves space for arrow */
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #cccccc;
+    background-color: white;
+    color: #333;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+     margin-top: 12px;
+}
+
+/* Focus state */
+#highlightComboBox:focus,
+#funcsComboBox:focus {
+    border-color: #90caf9;
+    box-shadow: 0 0 3px #90caf9;
+}
+
+/* Custom arrow */
+.comboBox-wrapper::after {
+    content: "▼";
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #666;
+    font-size: 12px;
+    margin-top: 12px;
+}
+

@@ -415,7 +415,7 @@ document.getElementById("executeProgramBtn").addEventListener("click", async () 
         return;
     }
 
-   window.location.href = `execute.html?username=${username}&programName=${selectedProgram}&isProgram=${typeProgramSelected === SELECT_PROGRAM ? 1 : 0}&availableCredit=${availableCredit}`;
+   window.location.href = `execute.html?username=${username}&programName=${selectedProgram}&isProgram=${typeProgramSelected === SELECT_PROGRAM ? true : false}&availableCredit=${availableCredit}`;
 
 });
 

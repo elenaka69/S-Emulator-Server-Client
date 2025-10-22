@@ -97,7 +97,6 @@ public class ExecutionController {
     private int currentStepIndex = 0;
     private String highlightText = null;
     private int maxDegree;
-    private int runHistoryCounter = 0;
     private final ObservableList<ProgramHistoryRow> historyRunData = FXCollections.observableArrayList();
     private ChatUIHelper chatHelper;
 
@@ -586,7 +585,7 @@ public class ExecutionController {
     private void populateProgramStatisticTable(List<RunResultProperty> runStatistics)
     {
         ObservableList<ProgramHistoryRow> data = FXCollections.observableArrayList();
-
+        int runHistoryCounter = 0;
         for (int i = 0; i < runStatistics.size(); i++) {
             RunResultProperty stat = runStatistics.get(i);
             data.add(new ProgramHistoryRow(
@@ -1004,6 +1003,7 @@ public class ExecutionController {
                     loadHighlightComboBox();
                     loadInputVariables();
                     setRangeDegree(0);
+                    setStatistics();
                     debugTable.getItems().clear();
                 });
             } else {

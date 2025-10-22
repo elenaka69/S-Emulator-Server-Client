@@ -34,19 +34,19 @@
             <div class="instruction-container">
                 <h2>Instructions</h2>
                 <div class="hbox" style="display: flex; gap: 15px;">
-                    <label for="expandField" style="margin-top: 20px;" >Range Degrees</label>
-                    <input type="text" id="expandField" placeholder="0" readonly style="width: 20px; height: 12px; color: #333;margin-top: 12px;">
+                    <label id="expandLabel" for="expandField" style="margin-top: 20px;" >Range Degrees</label>
+                    <input type="text" id="expandField" placeholder="0" readonly style="width: 10px; height: 12px; color: #333;margin-top: 12px; text-align: left;">
                     <button id="expandButton">Expand</button>
                     <button id="collapseButton">Collapse</button>
                 </div>
 
                 <div class="hbox" style="display: flex; gap: 40px;">
-                    <select id="funcsComboBox" class="form-control">
-                        <option>Function Selector</option>
-                    </select>
-                    <select id="highlightComboBox" class="form-control">
-                        <option>Highlight selection</option>
-                    </select>
+                    <div class="comboBox-wrapper">
+                        <select id="funcsComboBox" > </select>
+                    </div>
+                    <div class="comboBox-wrapper">
+                        <select id="highlightComboBox" ></select>
+                    </div>
                 </div>
                 <div class="instruction-table-wrapper">
                     <h3>Program instructions</h3>
@@ -82,17 +82,17 @@
                         </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td colspan="6">Loading instructions...</td>
-                            </tr>
+
                         </tbody>
                     </table>
                 </div>
             </div>
             <div class="run-container">
                 <h2>Run</h2>
-                <div class="hbox" style=" margin-bottom: 70px;">
+
+                <div class="hbox" style="display: flex; gap: 40px; margin-bottom: 70px;  margin-left : 70px;">
                     <button id="runButton">Run</button>
+                    <div id="runBox"></div>
                 </div>
                 <div class="run-table-wrapper">
                     <h3>Run result</h3>
@@ -104,9 +104,6 @@
                         </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td colspan="2">Loading results...</td>
-                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -123,9 +120,6 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td colspan="5">Loading results...</td>
-                        </tr>
                         </tbody>
                     </table>
                 </div>

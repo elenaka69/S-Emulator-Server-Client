@@ -19,8 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const response = await sendRequest("login", { username });
             if (response.ok) {
-                // login successful → redirect to dashboard page
-                // You can create a dashboard.html similar to Dashboard.fxml
                 window.location.href = "dashboard.html?username=" + encodeURIComponent(username);
             } else {
                 errorMsg.textContent = response.message;
