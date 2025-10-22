@@ -91,7 +91,7 @@ public class DashboardController {
     private String selectedUser;
     private String selectedProgram = null;
     private int selectedProgramCost = 0;
-    private final int SELECT_NONE = -1;
+    private final int SELECT_NONE = 0;
     private final int SELECT_PROGRAM = 1;
     private final int SELECT_FUNCTION = 2;
     private int typeProgramSelected = SELECT_NONE;
@@ -362,9 +362,7 @@ public class DashboardController {
                     if (response.data != null && response.data.containsKey("newBalance")) {
                         creditsField.setText(response.data.get("newBalance").toString());
                         chargeAmountField.clear();
-                        if (selectedUser.equals(clientUsername)) {
-                            loadConnectedUsers();
-                        }
+                        loadConnectedUsers();
                     }
                 });
             } else {
@@ -382,24 +380,18 @@ public class DashboardController {
 
     @FXML
     public void onExecuteProgram(ActionEvent actionEvent) {
-        if (typeProgramSelected == SELECT_NONE) {
+        if (typeProgramSelected == SELECT_NONE || selectedProgram == null) {
             showAlert("Program","⚠ Please select a program or function to execute.", Alert.AlertType.WARNING);
             return;
         }
 
-        if (selectedProgram == null) {
-            showAlert("Program","⚠ Please select a program to execute.", Alert.AlertType.WARNING);
+        if (selectedProgramCost > Integer.parseInt(creditsField.getText())) {
+            showAlert("Insufficient Credits",
+                    "You do not have enough credits to execute this program.\n" +
+                            "Program Cost: " + selectedProgramCost + "\n" +
+                            "Your Credits: " + creditsField.getText(),
+                    Alert.AlertType.WARNING);
             return;
-        }
-        if (typeProgramSelected == SELECT_PROGRAM) {
-            if (selectedProgramCost > Integer.parseInt(creditsField.getText())) {
-                showAlert("Insufficient Credits",
-                        "You do not have enough credits to execute this program.\n" +
-                                "Program Cost: " + selectedProgramCost + "\n" +
-                                "Your Credits: " + creditsField.getText(),
-                        Alert.AlertType.WARNING);
-                return;
-            }
         }
 
         openExecution();

@@ -1,32 +1,283 @@
-body {
+html, body {
     font-family: Arial, sans-serif;
     background-color: #f2f2f2;
     text-align: center;
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 header, footer {
-    background-color: #ddd;
+    text-align: center;
     padding: 10px;
+    background-color: #f2f2f2;
 }
 
 main {
-    margin-top: 40px;
+    flex: 1;
+    display: flex;
+    justify-content: center; /* vertical centering */
+}
+
+.main-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* aligns children (rows, tables) to the left */
+    width: 90%; /* or fixed px like 1000px if you want */
+    max-width: 1200px;
+}
+
+.main-login-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* center login form */
+    width: 90%; /* or fixed px like 1000px if you want */
+    max-width: 1200px;
 }
 
 .input-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 10px auto;
+     position: relative;
+    display: inline-block;
+    margin-bottom: 12px;
 }
 
 .input-icon {
-    width: 24px;
-    height: 24px;
-    margin-right: 5px;
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;        /* 👈 ideal size */
+    height: 20px;
+    opacity: 0.7;
+}
+
+input[type="text"] {
+    width: 220px;
+    padding: 10px 10px 10px 35px; /* space for icon */
+    border-radius: 5px;
+    border: 1px solid #3399ff;
+    font-size: 1em;
+    text-align: left;
+}
+
+button, input[type="text"] {
+    height: 36px;
+}
+
+login-icon {
+    width: 80px;
+    height: 80px;
+    display: block;
+    margin: 0 auto 10px auto; /* center + space below */
+    opacity: 0.9;             /* slightly transparent for a soft look */
+}
+
+button {
+    background-color: #4da6ff;  /* light blue */
+    color: white;
+    border: none;
+    border-radius: 8px;         /* rounded corners */
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 12px;
+}
+
+button:hover {
+    background-color: #3399ff;  /* slightly darker blue on hover */
 }
 
 .errorLogin {
     color: red;
     margin: 10px;
 }
+
+.top-section, .file-section, .progress-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+
+        .top-section h1 {
+            margin: 0;
+        }
+
+        .module {
+            border: 1px solid gray;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        th, td {
+            border: 1px solid gray;
+            padding: 5px;
+            text-align: left;
+        }
+
+        .chat {
+            display: none; /* Initially hidden */
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            border: 1px solid gray;
+            height: 200px;
+            overflow-y: auto;
+            padding: 5px;
+            margin-bottom: 5px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background-color: #4caf50;
+        }
+
+        .tables-container {
+            display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;
+            gap: 40px;                /* space between tables */
+            overflow-x: auto;         /* allows horizontal scroll if screen too small */
+            margin-bottom: 10px;
+        }
+        .tables-container::-webkit-scrollbar {
+            height: 8px;              /* scrollbar height */
+        }
+
+        .users-table-wrapper,
+        .statistic-table-wrapper,
+        .programs-table-wrapper,
+        .functions-table-wrapper,
+        .instruction-table-wrapper {
+            width: 600px;           /* fixed width */
+            height: 260px;          /* fixed height */
+            overflow-y: auto;       /* vertical scrollbar when needed */
+            overflow-x: hidden;     /* no horizontal scroll */
+            margin: 20px 0;         /* spacing from top/bottom, aligned left */
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: white;
+        }
+
+        /* Connected Users Table */
+        #connectedUsersTable,
+        #statisticTable,
+        #programsTable,
+        #functionsTable,
+         #instructionTable {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        #connectedUsersTable caption,
+        #statisticTable caption,
+        #programsTable caption,
+        #functionsTable caption,
+        #instructionTable caption {
+            caption-side: top;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 8px;
+            padding: 4px 0;
+            font-size: 1.1em;
+        }
+
+        #connectedUsersTable th,
+        #connectedUsersTable td,
+        #statisticTable th,
+        #statisticTable td,
+        #programsTable th,
+        #programsTable td,
+        #functionsTable th,
+        #functionsTable td,
+        #instructionTable th,
+        #instructionTable td {
+            border: 1px solid #333;
+            padding: 6px;
+            text-align: center;
+            word-wrap: break-word;  /* wrap long text */
+        }
+
+        #connectedUsersTable thead tr,
+        #statisticTable thead tr,
+        #programsTable thead tr,
+        #functionsTable thead tr,
+         #instructionTable thead tr {
+            background-color: #4da6ff;
+            color: white;
+        }
+
+        #connectedUsersTable tbody tr:nth-child(even),
+        #statisticTable tbody tr:nth-child(even),
+        #programsTable tbody tr:nth-child(even),
+        #functionsTable tbody tr:nth-child(even),
+         #instructionTable tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        #connectedUsersTable tr.selected,
+        #programsTable tr.selected,
+        #functionsTable tr.selected {
+            background-color: #d9edf7 !important;
+
+        }
+
+        #connectedUsersTable tr:hover:not(.selected),
+        #programsTable tr:hover:not(.selected),
+        #functionsTable tr:hover:not(.selected) {
+            background-color: #f1f1f1;
+        }
+
+
+        #connectedUsersTable tbody tr:hover,
+        #statisticTable tbody tr:hover,
+        #programsTable tbody tr:hover,
+        #functionsTable tbody tr:hover,
+         #instructionTable tbody tr:hover {
+            background-color: #d9edf7;!important;
+        }
+
+        #connectedUsersTable td[colspan],
+        #statisticTable td[colspan],
+        #programsTable td[colspan],
+        #functionsTable td[colspan],
+         #instructionTable td[colspan] {
+            font-style: italic;
+            color: #666;
+        }
+
+        .button-container {
+             display: flex;
+            justify-content: space-between; /* push buttons to edges */
+            width: 100%;                   /* full width of main-wrapper */
+            max-width: 1200px;             /* optional: limits width */
+            margin: 10px auto;             /* centers container if smaller than screen */
+            box-sizing: border-box;        /* include padding in width */
+        }
+        .button-container button {
+            width: auto;     /* let button fit the text */
+            padding: 6px 12px; /* optional: control spacing */
+            white-space: nowrap; /* prevent text wrapping */
+        }

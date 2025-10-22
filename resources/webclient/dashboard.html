@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>S-Emulator Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+    <h1>S-Emulator Dashboard</h1>
+</header>
+
+<main>
+    <div class="main-wrapper">
+        <div id="userDisplay" style="font-weight: bold; font-size: 1.2em; margin: 10px 0; text-align: left;">
+            <span id="loggedInUser">User</span>
+        </div>
+    <!-- Controls row: File + Credits -->
+        <div style="display: flex; align-items: center; gap: 10px;  margin-bottom: 20px; flex-wrap: nowrap;">
+
+            <!-- File controls -->
+            <button type="button" id="loadFileBtn">Load File</button>
+            <input type="text" id="fileNameLabel" placeholder="No file chosen" readonly
+                   style="width: 430px; height: 16px; font-style: italic; color: #333; margin-top: 12px;">
+            <input type="file" id="xmlFile" name="xmlFile" accept=".xml" style="display: none;">
+
+            <!-- Credits controls -->
+            <label for="availCredit" style="font-weight: bold;">Available Credits:</label>
+            <input type="text" id="availCredit" placeholder="Avail credit" readonly
+                   style="width: 80px; height: 16px; color: #333; margin-top: 12px;">
+            <button type="button" id="chargeCreditBtn">Charge Credit</button>
+            <input type="text" id="creditInput" placeholder="Credits" style="width: 80px; height: 16px; margin-top: 12px;">
+        </div>
+
+
+        <!-- Users module -->
+        <div class="tables-container">
+            <div class="users-table-wrapper">
+                <table id="connectedUsersTable">
+                    <caption>Available Users:</caption>
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Username</th>
+                        <th>#Prog</th>
+                        <th>#Funcs</th>
+                        <th>Credits</th>
+                        <th>Spent</th>
+                        <th>Exec</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="7">Loading users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="programs-table-wrapper">
+                <table id="programsTable">
+                    <caption>Available Users:</caption>
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>User</th>
+                        <th>#Inst</th>
+                        <th>Max Cost</th>
+                        <th>#Exec</th>
+                        <th>Aver Cost</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="7">Loading users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="button-container ">
+            <button type="button" id="unSelectUserBtn">Unselect User</button>
+            <button type="button" id="executeProgramBtn">Execute Program</button>
+        </div>
+
+        <div class="tables-container">
+            <div class="statistic-table-wrapper">
+                <table id="statisticTable">
+                    <caption>Statistics:</caption>
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Type</th>
+                        <th>Name</th>
+                        <th>Arch</th>
+                        <th>Degree</th>
+                        <th>Result</th>
+                        <th>Cycles</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="7">Loading programs...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+
+            <div class="functions-table-wrapper">
+                <table id="functionsTable">
+                    <caption>Available Functions:</caption>
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Name</th>
+                        <th>Program</th>
+                        <th>User</th>
+                        <th>#Inst</th>
+                        <th>Max Cost</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="6">Loading programs...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Chat module -->
+        <div id="chatPane" class="module chat">
+            <h2>Chat</h2>
+            <div class="chat-messages" id="chatBox"></div>
+            <div>
+                <input type="text" id="chatInput" placeholder="Type your message...">
+                <button id="sendChatButton">Send</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <span id="statusBar">Ready.</span>
+</footer>
+
+<script src="js/dashboard.js" defer></script>
+</body>
+</html>
