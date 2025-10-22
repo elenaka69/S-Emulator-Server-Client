@@ -398,24 +398,24 @@ document.getElementById("unSelectUserBtn").addEventListener("click", async () =>
 document.getElementById("executeProgramBtn").addEventListener("click", async () => {
 
     if (typeProgramSelected === SELECT_NONE || !selectedProgram) {
-        alert("Please select a program or function to execute.");
+        showAlert("Warning!", "Please select a program or function to execute.", "warning");
         return;
     }
 
-    const availableCredits = parseInt(availCredit.value);
+    const availableCredit = parseInt(availCredit.value);
 
-    if (selectedProgramCost > availableCredits) {
+    if (selectedProgramCost > availableCredit) {
         showAlert(
             "Insufficient Credits",
             `You do not have enough credits to execute  ${selectedProgram} .\n` +
             `Program Cost: ${selectedProgramCost}\n` +
-            `Your Credits: ${availableCredits}`,
+            `Your Credits: ${availableCredit}`,
             "warning"
         );
         return;
     }
 
- //   window.location.href = `execute.html?username=username&programName=selectedProgram&isProgram=${typeProgramSelected === SELECT_PROGRAM ? 1 : 0}&availableCredit=${availableCredits}`;
+   window.location.href = `execute.html?username=${username}&programName=${selectedProgram}&isProgram=${typeProgramSelected === SELECT_PROGRAM ? 1 : 0}&availableCredit=${availableCredit}`;
 
 });
 
@@ -494,11 +494,27 @@ function showAlert(title, message, type = "info") {
         default: color = "blue";
     }
 
-    alert(`${title}\n\n${message}`);
+    // Create a custom alert div
+    const alertBox = document.createElement("div");
+    alertBox.style.position = "fixed";
+    alertBox.style.top = "20px";
+    alertBox.style.left = "50%";
+    alertBox.style.transform = "translateX(-50%)";
+    alertBox.style.backgroundColor = color;
+    alertBox.style.color = "white";
+    alertBox.style.padding = "10px 20px";
+    alertBox.style.borderRadius = "8px";
+    alertBox.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
+    alertBox.style.zIndex = "1000";
+    alertBox.style.fontWeight = "bold";
+    alertBox.textContent = `${title}: ${message}`;
+    document.body.appendChild(alertBox);
+
+    // Remove after 3 seconds
+    setTimeout(() => alertBox.remove(), 3000);
 
     showStatus(`${title}: ${message}`, type);
 }
-
 
 function showStatus(message, type = "info") {
     const statusBar = document.getElementById('statusBar');

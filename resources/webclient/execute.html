@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>S-Emulator Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+    <h1>S-Emulator Execution</h1>
+</header>
+
+<main>
+    <div class="main-wrapper">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; width: 100%; justify-content: space-between; flex-wrap: nowrap;">
+            <!-- Left: User display -->
+            <div id="userDisplay" style="font-weight: bold; font-size: 1.2em; text-align: left;">
+                <span id="loggedInUser">User</span>
+            </div>
+            <!-- Center: Available Credits -->
+            <div style="text-align: center;">
+                <label for="availCredit" style="font-weight: bold;">Available Credits: </label>
+                <input type="text" id="availCredit" placeholder="Avail credit" readonly
+                       style="width: 80px; height: 20px; color: #333;">
+            </div>
+            <!-- Right: Back button -->
+            <div class="hbox">
+                <button id="backButton">Back to Dashboard</button>
+            </div>
+        </div>
+
+        <div class="tables-container">
+            <div class="instruction-container">
+                <h2>Instructions</h2>
+                <div class="hbox" style="display: flex; gap: 15px;">
+                    <label for="expandField" style="margin-top: 20px;" >Range Degrees</label>
+                    <input type="text" id="expandField" placeholder="0" readonly style="width: 20px; height: 12px; color: #333;margin-top: 12px;">
+                    <button id="expandButton">Expand</button>
+                    <button id="collapseButton">Collapse</button>
+                </div>
+
+                <div class="hbox" style="display: flex; gap: 40px;">
+                    <select id="funcsComboBox" class="form-control">
+                        <option>Function Selector</option>
+                    </select>
+                    <select id="highlightComboBox" class="form-control">
+                        <option>Highlight selection</option>
+                    </select>
+                </div>
+                <div class="instruction-table-wrapper">
+                    <h3>Program instructions</h3>
+                    <table id="instructionTable">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Type</th>
+                            <th>Arch</th>
+                            <th>Label</th>
+                            <th>Instruction</th>
+                            <th>Cycle</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6">Loading instructions...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="history-instruction-table-wrapper">
+                    <h3>Instruction history chain</h3>
+                    <table id="historyInstructionTable">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Type</th>
+                            <th>Arch</th>
+                            <th>Label</th>
+                            <th>Instruction</th>
+                            <th>Cycle</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="6">Loading instructions...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="run-container">
+                <h2>Run</h2>
+                <div class="hbox" style=" margin-bottom: 70px;">
+                    <button id="runButton">Run</button>
+                </div>
+                <div class="run-table-wrapper">
+                    <h3>Run result</h3>
+                    <table id="runResultTable">
+                        <thead>
+                        <tr>
+                            <th>Variable</th>
+                            <th>Value</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="2">Loading results...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="run-history-table-wrapper">
+                    <h3>Program's run history</h3>
+                    <table id="runHistoryTable">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Degree</th>
+                            <th>Input</th>
+                            <th>Result</th>
+                            <th>Cycle</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td colspan="5">Loading results...</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<footer>
+    <span id="statusBar">Ready.</span>
+</footer>
+
+<script src="js/execute.js" defer></script>
+</body>
+</html>
