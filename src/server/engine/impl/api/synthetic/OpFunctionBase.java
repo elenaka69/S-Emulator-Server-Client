@@ -115,7 +115,7 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
         VariableImpl resultVar = program.newWorkVar();
 
 
-        List<AbstractOpBasic> ops = new ArrayList<>(expandFunction(function, resultVar, this));
+        List<AbstractOpBasic> ops = new ArrayList<>(expandFunction(resultVar, this));
 
         AbstractOpBasic finalOp = getFinalOp(resultVar, this);
         ops.add(finalOp);
@@ -225,7 +225,7 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
     @Override
     public abstract String getRepresentation();
 
-    protected List<AbstractOpBasic> expandFunction(FunctionExecutor func, VariableImpl resultVar, AbstractOpBasic parent)
+    protected List<AbstractOpBasic> expandFunction(VariableImpl resultVar, AbstractOpBasic parent)
     {
         List<AbstractOpBasic> ops = new ArrayList<>();
         Map<VariableImpl,VariableImpl> vars = new HashMap<>();
@@ -233,16 +233,16 @@ public abstract  class OpFunctionBase extends AbstractOpBasic {
         ops.add(initOp);
         VariableImpl workVar;
 
+        SprogramImpl mainProgram = function.getParentProgram();
+        if (mainProgram == null)
+            mainProgram = (SprogramImpl)function;
+
         FunctionExecutor functionClone = function.myClone();
 
         if(getLabel() != null && !getLabel().equals(FixedLabel.EMPTY))
-            func.addLabel(getLabel(), initOp);
+            functionClone.addLabel(getLabel(), initOp);
 
         VariableImpl funcVar;
-
-        SprogramImpl mainProgram = func.getParentProgram();
-        if (mainProgram == null)
-            mainProgram = (SprogramImpl)func;
 
         if (functionArguments != null) {
              int idx = 0;
