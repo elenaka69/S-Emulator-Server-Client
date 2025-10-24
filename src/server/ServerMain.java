@@ -14,6 +14,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Executors;
 
@@ -41,12 +44,11 @@ public class ServerMain extends ServerApiHandlers {
         String path = exchange.getRequestURI().getPath();
         if (path.equals("/")) path = "/index.html";
 
-        // Path relative to resources/webclient
-        String resourcePath = "webclient" + path;
+        // Path relative to webapp folder
+        Path webRoot = Paths.get("webapp"); // your new folder
+        Path filePath = webRoot.resolve(path.substring(1)); // remove leading "/"
 
-        // Load from resources (works both in IntelliJ and JAR)
-        InputStream fileStream = ServerMain.class.getClassLoader().getResourceAsStream(resourcePath);
-        if (fileStream == null) {
+        if (!Files.exists(filePath) || Files.isDirectory(filePath)) {
             exchange.sendResponseHeaders(404, -1);
             return;
         }
@@ -54,7 +56,7 @@ public class ServerMain extends ServerApiHandlers {
         String contentType = getContentType(path);
         exchange.getResponseHeaders().set("Content-Type", contentType);
 
-        byte[] bytes = fileStream.readAllBytes();
+        byte[] bytes = Files.readAllBytes(filePath);
         exchange.sendResponseHeaders(200, bytes.length);
         try (OutputStream os = exchange.getResponseBody()) {
             os.write(bytes);

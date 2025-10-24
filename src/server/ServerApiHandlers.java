@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class ServerApiHandlers {
 
-    protected BaseResponse handleApi(BaseRequest req)
+    public BaseResponse handleApi(BaseRequest req)
     {
         BaseResponse response;
         response = switch (req.action) {
