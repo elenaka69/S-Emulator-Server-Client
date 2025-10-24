@@ -5,5 +5,5 @@ S-Emulator/
  │    ├─ server.jar
  │    └─ client.jar
  ├─ lib/
- │  ├─ run_server.bat
+ │  run_server.bat
  └─ run_client.bat

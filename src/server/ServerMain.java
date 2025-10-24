@@ -24,14 +24,14 @@ public class ServerMain {
     public static void main(String[] args) throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 8080), 0);
         server.createContext("/api", ServerMain::handleApi);
-        server.createContext("/", ServerMain::handleStaticFiles);
+        server.createContext("/", ServerMain::handleWebDefault);
         server.setExecutor(Executors.newFixedThreadPool(8)); // Thread pool for concurrency
         server.start();
-        System.out.println("✅ Server started at: http://localhost:8080");
-        System.out.println("   API available at: http://localhost:8080/api");
+        System.out.println(" Server started at: http://localhost:8080");
+        System.out.println(" API available at: http://localhost:8080/api");
     }
 
-    private static void handleStaticFiles(HttpExchange exchange) throws IOException {
+    private static void handleWebDefault(HttpExchange exchange) throws IOException {
         addCORS(exchange);
 
         String path = exchange.getRequestURI().getPath();
